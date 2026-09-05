@@ -52,8 +52,11 @@ export type Database = {
           duration_seconds: number
           end_reason: string | null
           ended_at: string | null
+          estimated_cost_usd: number
           id: string
+          input_tokens: number
           model: string
+          output_tokens: number
           provider: string
           started_at: string
           status: string
@@ -71,8 +74,11 @@ export type Database = {
           duration_seconds?: number
           end_reason?: string | null
           ended_at?: string | null
+          estimated_cost_usd?: number
           id?: string
+          input_tokens?: number
           model?: string
+          output_tokens?: number
           provider?: string
           started_at?: string
           status?: string
@@ -90,8 +96,11 @@ export type Database = {
           duration_seconds?: number
           end_reason?: string | null
           ended_at?: string | null
+          estimated_cost_usd?: number
           id?: string
+          input_tokens?: number
           model?: string
+          output_tokens?: number
           provider?: string
           started_at?: string
           status?: string
@@ -819,12 +828,19 @@ export type Database = {
           ai_context_consent: boolean
           consent_accepted_at: string | null
           created_at: string
+          date_of_birth: string | null
           id: string
           language: string
           onboarding_completed: boolean
           org_id: string | null
           preferred_name: string | null
           privacy_consent: boolean
+          stripe_billing_interval: string | null
+          stripe_customer_id: string | null
+          stripe_price_id: string | null
+          stripe_subscription_id: string | null
+          stripe_subscription_status: string | null
+          subscription_current_period_end: string | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
           timezone: string | null
           updated_at: string
@@ -835,12 +851,19 @@ export type Database = {
           ai_context_consent?: boolean
           consent_accepted_at?: string | null
           created_at?: string
+          date_of_birth?: string | null
           id: string
           language?: string
           onboarding_completed?: boolean
           org_id?: string | null
           preferred_name?: string | null
           privacy_consent?: boolean
+          stripe_billing_interval?: string | null
+          stripe_customer_id?: string | null
+          stripe_price_id?: string | null
+          stripe_subscription_id?: string | null
+          stripe_subscription_status?: string | null
+          subscription_current_period_end?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           timezone?: string | null
           updated_at?: string
@@ -851,12 +874,19 @@ export type Database = {
           ai_context_consent?: boolean
           consent_accepted_at?: string | null
           created_at?: string
+          date_of_birth?: string | null
           id?: string
           language?: string
           onboarding_completed?: boolean
           org_id?: string | null
           preferred_name?: string | null
           privacy_consent?: boolean
+          stripe_billing_interval?: string | null
+          stripe_customer_id?: string | null
+          stripe_price_id?: string | null
+          stripe_subscription_id?: string | null
+          stripe_subscription_status?: string | null
+          subscription_current_period_end?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           timezone?: string | null
           updated_at?: string
@@ -893,6 +923,24 @@ export type Database = {
           taken_at?: string
           total_score?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      stripe_webhook_events: {
+        Row: {
+          created_at: string
+          id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          type?: string
         }
         Relationships: []
       }
@@ -1153,7 +1201,7 @@ export type Database = {
       chat_sender: "user" | "assistant" | "system"
       commitment_source: "chat" | "exercise"
       commitment_status: "pending" | "done" | "skipped"
-      subscription_tier: "free" | "premium" | "org"
+      subscription_tier: "free" | "pro" | "premium" | "org"
       support_sender: "user" | "admin"
       support_status: "open" | "in_progress" | "resolved"
     }
@@ -1288,7 +1336,7 @@ export const Constants = {
       chat_sender: ["user", "assistant", "system"],
       commitment_source: ["chat", "exercise"],
       commitment_status: ["pending", "done", "skipped"],
-      subscription_tier: ["free", "premium", "org"],
+      subscription_tier: ["free", "pro", "premium", "org"],
       support_sender: ["user", "admin"],
       support_status: ["open", "in_progress", "resolved"],
     },
