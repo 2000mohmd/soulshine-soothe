@@ -30,9 +30,9 @@ export const Route = createFileRoute("/_authenticated/plans")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>): { checkout?: string } => ({
-    checkout: typeof search.checkout === "string" ? search.checkout : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { checkout?: string | undefined } =>
+    typeof search["checkout"] === "string" ? { checkout: search["checkout"] } : {},
+
   component: PlansPage,
 });
 

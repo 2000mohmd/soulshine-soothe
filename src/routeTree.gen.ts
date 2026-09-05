@@ -24,6 +24,7 @@ import { Route as AuthenticatedExercisesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedHabitsRouteImport } from './routes/_authenticated/habits'
 import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated/insights'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
@@ -135,6 +136,11 @@ const AuthenticatedInsightsRoute = AuthenticatedInsightsRouteImport.update({
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPlansRoute = AuthenticatedPlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -354,6 +360,7 @@ export interface FileRoutesByFullPath {
   '/habits': typeof AuthenticatedHabitsRoute
   '/insights': typeof AuthenticatedInsightsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/plans': typeof AuthenticatedPlansRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/support': typeof AuthenticatedSupportRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
@@ -407,6 +414,7 @@ export interface FileRoutesByTo {
   '/habits': typeof AuthenticatedHabitsRoute
   '/insights': typeof AuthenticatedInsightsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/plans': typeof AuthenticatedPlansRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/support': typeof AuthenticatedSupportRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
@@ -463,6 +471,7 @@ export interface FileRoutesById {
   '/_authenticated/habits': typeof AuthenticatedHabitsRoute
   '/_authenticated/insights': typeof AuthenticatedInsightsRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/plans': typeof AuthenticatedPlansRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
@@ -519,6 +528,7 @@ export interface FileRouteTypes {
     | '/habits'
     | '/insights'
     | '/onboarding'
+    | '/plans'
     | '/settings'
     | '/support'
     | '/admin/audit'
@@ -572,6 +582,7 @@ export interface FileRouteTypes {
     | '/habits'
     | '/insights'
     | '/onboarding'
+    | '/plans'
     | '/settings'
     | '/support'
     | '/admin/audit'
@@ -627,6 +638,7 @@ export interface FileRouteTypes {
     | '/_authenticated/habits'
     | '/_authenticated/insights'
     | '/_authenticated/onboarding'
+    | '/_authenticated/plans'
     | '/_authenticated/settings'
     | '/_authenticated/support'
     | '/_authenticated/admin/audit'
@@ -805,6 +817,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/plans': {
+      id: '/_authenticated/plans'
+      path: '/plans'
+      fullPath: '/plans'
+      preLoaderRoute: typeof AuthenticatedPlansRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
@@ -1112,6 +1131,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHabitsRoute: typeof AuthenticatedHabitsRoute
   AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedPlansRoute: typeof AuthenticatedPlansRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
 }
@@ -1126,6 +1146,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHabitsRoute: AuthenticatedHabitsRoute,
   AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedPlansRoute: AuthenticatedPlansRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
 }
