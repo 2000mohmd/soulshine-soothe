@@ -196,7 +196,7 @@ export async function completeOnboardingCore(
       console.error("welcome message generation failed", error);
     }
 
-    return { ok: true };
+    return { ok: true, care_plan: carePlan, care_plan_focus: carePlanFocus };
   }
 }
 
