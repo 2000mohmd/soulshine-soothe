@@ -169,7 +169,8 @@ Recently built (was on this list):
   context.
 - **Localization** — member-facing screens are EN/AR/FR; crisis resources are
   localized (`crisisCopy()` — AR/FR drop US-only lines); `care_resources.region`
-  is now filtered (see "Precise region signal" above).
+  is now filtered (see "Precise region signal" above). Public language changes
+  remain local until sign-in, avoiding protected profile requests without a session.
 - **Mobile API** — versioned HTTP surface under `src/routes/api/v1/*` with a
   bearer-token auth bridge (`src/lib/api-auth.server.ts`); full contract in
   `docs/MOBILE_API.md`.
