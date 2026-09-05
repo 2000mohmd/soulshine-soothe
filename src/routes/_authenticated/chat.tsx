@@ -167,6 +167,7 @@ function ChatPage() {
   const [actions, setActions] = useState<CompanionAction[]>([]);
   const [pending, setPending] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [callOpen, setCallOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -536,6 +537,16 @@ function ChatPage() {
           </div>
         </div>
       </section>
+
+      {callOpen && (
+        <VoiceCallOverlay
+          threadId={threadId}
+          onClose={() => {
+            setCallOpen(false);
+            void queryClient.invalidateQueries({ queryKey: ["thread-history"] });
+          }}
+        />
+      )}
     </div>
   );
 }
