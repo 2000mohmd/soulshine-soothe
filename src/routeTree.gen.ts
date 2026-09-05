@@ -58,6 +58,7 @@ import { Route as ApiV1ChatThreadsRouteImport } from './routes/api/v1/chat/threa
 import { Route as ApiV1PushRegisterTokenRouteImport } from './routes/api/v1/push/register-token'
 import { Route as ApiV1ChatMessagesStreamRouteImport } from './routes/api/v1/chat/messages/stream'
 import { Route as ApiV1ScreenersTypeResponsesRouteImport } from './routes/api/v1/screeners/$type/responses'
+import { Route as ApiV1AdminUsersUserIdCostRouteImport } from './routes/api/v1/admin/users/$userId/cost'
 import { Route as ApiV1CallsSessionsIdEndRouteImport } from './routes/api/v1/calls/sessions/$id/end'
 import { Route as ApiV1CallsSessionsIdTurnsRouteImport } from './routes/api/v1/calls/sessions/$id/turns'
 import { Route as ApiV1ChatThreadsIdMessagesRouteImport } from './routes/api/v1/chat/threads/$id/messages'
@@ -314,6 +315,12 @@ const ApiV1ScreenersTypeResponsesRoute =
     path: '/$type/responses',
     getParentRoute: () => ApiV1ScreenersRoute,
   } as any)
+const ApiV1AdminUsersUserIdCostRoute =
+  ApiV1AdminUsersUserIdCostRouteImport.update({
+    id: '/api/v1/admin/users/$userId/cost',
+    path: '/api/v1/admin/users/$userId/cost',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiV1CallsSessionsIdEndRoute = ApiV1CallsSessionsIdEndRouteImport.update({
   id: '/$id/end',
   path: '/$id/end',
@@ -381,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/api/v1/chat/messages/stream': typeof ApiV1ChatMessagesStreamRoute
   '/api/v1/screeners/$type/responses': typeof ApiV1ScreenersTypeResponsesRoute
+  '/api/v1/admin/users/$userId/cost': typeof ApiV1AdminUsersUserIdCostRoute
   '/api/v1/calls/sessions/$id/end': typeof ApiV1CallsSessionsIdEndRoute
   '/api/v1/calls/sessions/$id/turns': typeof ApiV1CallsSessionsIdTurnsRoute
   '/api/v1/chat/threads/$id/messages': typeof ApiV1ChatThreadsIdMessagesRoute
@@ -433,6 +441,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AuthenticatedAdminUsersIndexRoute
   '/api/v1/chat/messages/stream': typeof ApiV1ChatMessagesStreamRoute
   '/api/v1/screeners/$type/responses': typeof ApiV1ScreenersTypeResponsesRoute
+  '/api/v1/admin/users/$userId/cost': typeof ApiV1AdminUsersUserIdCostRoute
   '/api/v1/calls/sessions/$id/end': typeof ApiV1CallsSessionsIdEndRoute
   '/api/v1/calls/sessions/$id/turns': typeof ApiV1CallsSessionsIdTurnsRoute
   '/api/v1/chat/threads/$id/messages': typeof ApiV1ChatThreadsIdMessagesRoute
@@ -488,6 +497,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/api/v1/chat/messages/stream': typeof ApiV1ChatMessagesStreamRoute
   '/api/v1/screeners/$type/responses': typeof ApiV1ScreenersTypeResponsesRoute
+  '/api/v1/admin/users/$userId/cost': typeof ApiV1AdminUsersUserIdCostRoute
   '/api/v1/calls/sessions/$id/end': typeof ApiV1CallsSessionsIdEndRoute
   '/api/v1/calls/sessions/$id/turns': typeof ApiV1CallsSessionsIdTurnsRoute
   '/api/v1/chat/threads/$id/messages': typeof ApiV1ChatThreadsIdMessagesRoute
@@ -543,6 +553,7 @@ export interface FileRouteTypes {
     | '/admin/users/'
     | '/api/v1/chat/messages/stream'
     | '/api/v1/screeners/$type/responses'
+    | '/api/v1/admin/users/$userId/cost'
     | '/api/v1/calls/sessions/$id/end'
     | '/api/v1/calls/sessions/$id/turns'
     | '/api/v1/chat/threads/$id/messages'
@@ -595,6 +606,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/api/v1/chat/messages/stream'
     | '/api/v1/screeners/$type/responses'
+    | '/api/v1/admin/users/$userId/cost'
     | '/api/v1/calls/sessions/$id/end'
     | '/api/v1/calls/sessions/$id/turns'
     | '/api/v1/chat/threads/$id/messages'
@@ -649,6 +661,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/users/'
     | '/api/v1/chat/messages/stream'
     | '/api/v1/screeners/$type/responses'
+    | '/api/v1/admin/users/$userId/cost'
     | '/api/v1/calls/sessions/$id/end'
     | '/api/v1/calls/sessions/$id/turns'
     | '/api/v1/chat/threads/$id/messages'
@@ -684,6 +697,7 @@ export interface RootRouteChildren {
   ApiV1ChatMessagesRoute: typeof ApiV1ChatMessagesRouteWithChildren
   ApiV1ChatThreadsRoute: typeof ApiV1ChatThreadsRouteWithChildren
   ApiV1PushRegisterTokenRoute: typeof ApiV1PushRegisterTokenRoute
+  ApiV1AdminUsersUserIdCostRoute: typeof ApiV1AdminUsersUserIdCostRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1031,6 +1045,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1ScreenersTypeResponsesRouteImport
       parentRoute: typeof ApiV1ScreenersRoute
     }
+    '/api/v1/admin/users/$userId/cost': {
+      id: '/api/v1/admin/users/$userId/cost'
+      path: '/api/v1/admin/users/$userId/cost'
+      fullPath: '/api/v1/admin/users/$userId/cost'
+      preLoaderRoute: typeof ApiV1AdminUsersUserIdCostRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/calls/sessions/$id/end': {
       id: '/api/v1/calls/sessions/$id/end'
       path: '/$id/end'
@@ -1189,6 +1210,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiV1ChatMessagesRoute: ApiV1ChatMessagesRouteWithChildren,
   ApiV1ChatThreadsRoute: ApiV1ChatThreadsRouteWithChildren,
   ApiV1PushRegisterTokenRoute: ApiV1PushRegisterTokenRoute,
+  ApiV1AdminUsersUserIdCostRoute: ApiV1AdminUsersUserIdCostRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
