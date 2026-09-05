@@ -78,9 +78,12 @@ const post = (body: unknown) =>
     }),
   );
 
+// The profile write is an upsert (a plain update matched zero rows for accounts
+// with no profiles row yet, which silently failed onboarding).
 const profileUpdate = () =>
-  h.state.writes.find((w) => w.op === "update" && w.table === "profiles")?.row as
+  h.state.writes.find((w) => w.op === "upsert" && w.table === "profiles")?.row as
     Record<string, unknown> | undefined;
+
 
 beforeEach(() => {
   h.state.tables = { chat_threads: { single: { id: "thr-1" } } };
