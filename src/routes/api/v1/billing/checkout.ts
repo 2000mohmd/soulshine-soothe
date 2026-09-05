@@ -56,9 +56,12 @@ export const Route = createFileRoute("/api/v1/billing/checkout")({
             throw err;
           });
 
+          const plan = body.plan ?? "premium";
+          const interval = body.interval ?? "monthly";
+
           let priceId: string;
           try {
-            priceId = await resolvePlanPriceId(body.plan, body.interval);
+            priceId = await resolvePlanPriceId(plan, interval);
           } catch (err) {
             throw new ApiError(500, err instanceof Error ? err.message : "Billing isn't configured");
           }
@@ -83,8 +86,8 @@ export const Route = createFileRoute("/api/v1/billing/checkout")({
           return json({
             checkoutUrl: session.url,
             sessionId: session.id,
-            plan: body.plan,
-            interval: body.interval,
+            plan,
+            interval,
             priceId,
           });
         }),
