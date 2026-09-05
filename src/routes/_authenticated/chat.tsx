@@ -543,7 +543,7 @@ function ChatPage() {
           threadId={threadId}
           onClose={() => {
             setCallOpen(false);
-            void queryClient.invalidateQueries({ queryKey: ["thread-history"] });
+            void queryClient.invalidateQueries({ queryKey: ["chat-thread", threadId] });
           }}
         />
       )}
