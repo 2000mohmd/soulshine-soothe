@@ -1,1 +1,0 @@
-REVOKE ALL ON FUNCTION public.queue_crisis_admin_alert() FROM PUBLIC, anon, authenticated;
