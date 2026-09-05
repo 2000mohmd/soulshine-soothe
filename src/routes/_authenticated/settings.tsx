@@ -51,13 +51,6 @@ export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
 });
 
-const MODE_LABELS: Record<string, string> = {
-  general: "Everyday stress & low mood",
-  condition: "Managing a diagnosed condition",
-  teen: "Teen / student mode",
-  org_member: "Workplace plan",
-};
-
 function SettingsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -77,9 +70,9 @@ function SettingsPage() {
     mutationFn: () => wipeData(),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["my-profile"] });
-      toast.success("Your check-ins and self-introduction have been deleted.");
+      toast.success(t("settings.deleteData.done"));
     },
-    onError: () => toast.error("We couldn't delete that right now. Please try again."),
+    onError: () => toast.error(t("settings.deleteData.error")),
   });
 
   // Distinct from `mutation` above (data wipe, account stays). This removes the
@@ -89,10 +82,10 @@ function SettingsPage() {
     onSuccess: async () => {
       queryClient.clear();
       await supabase.auth.signOut();
-      toast.success("Your account has been deleted.");
+      toast.success(t("settings.deleteAccount.done"));
       navigate({ to: "/", replace: true });
     },
-    onError: () => toast.error("We couldn't delete your account right now. Please try again."),
+    onError: () => toast.error(t("settings.deleteAccount.error")),
   });
 
   // Distinct from `mutation` / `accountDeletion`: just flips the proactive-email
@@ -100,7 +93,7 @@ function SettingsPage() {
   const emailMutation = useMutation({
     mutationFn: (opt_out: boolean) => emailPref({ data: { opt_out } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-profile"] }),
-    onError: () => toast.error("We couldn't save that just now. Please try again."),
+    onError: () => toast.error(t("settings.saveError")),
   });
 
   const profile = data?.profile;
@@ -117,23 +110,28 @@ function SettingsPage() {
       ) : (
         <div className="space-y-6">
           <header>
-            <h1 className="text-3xl sm:text-4xl">Your profile &amp; data</h1>
-            <p className="mt-2 text-muted-foreground">
-              Everything Kalm knows about you, in one place.
-            </p>
+            <h1 className="text-3xl sm:text-4xl">{t("settings.title")}</h1>
+            <p className="mt-2 text-muted-foreground">{t("settings.subtitle")}</p>
           </header>
 
           <section className="surface-soft p-6">
-            <h2 className="text-lg">Account</h2>
+            <h2 className="text-lg">{t("settings.account")}</h2>
             <dl className="mt-4 grid gap-4 sm:grid-cols-2">
-              <Row label="Preferred name" value={profile?.preferred_name ?? "—"} />
+              <Row label={t("settings.preferredName")} value={profile?.preferred_name ?? "—"} />
               <Row
-                label="Mode"
-                value={MODE_LABELS[profile?.account_type ?? ""] ?? profile?.account_type ?? "—"}
+                label={t("settings.mode")}
+                value={
+                  profile?.account_type
+                    ? t(`settings.modes.${profile.account_type}`)
+                    : "—"
+                }
               />
-              <Row label="AI personalization" value={profile?.ai_context_consent ? "On" : "Off"} />
               <Row
-                label="Consent accepted"
+                label={t("settings.aiPersonalization")}
+                value={profile?.ai_context_consent ? t("settings.on") : t("settings.off")}
+              />
+              <Row
+                label={t("settings.consentAccepted")}
                 value={
                   profile?.consent_accepted_at
                     ? new Date(profile.consent_accepted_at).toLocaleDateString()
@@ -152,57 +150,53 @@ function SettingsPage() {
           </section>
 
           <section className="surface-soft p-6">
-            <h2 className="text-lg">Emails from Kalm</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Occasional gentle check-ins and a weekly reflection, sent to your account email. They
-              never mention how you've been feeling — just a nudge to open the app. Crisis-safety
-              and account emails are always sent.
-            </p>
+            <h2 className="text-lg">{t("settings.emails.title")}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{t("settings.emails.body")}</p>
             <label className="mt-4 flex items-center justify-between gap-4">
-              <span className="text-sm">Send me check-in &amp; weekly reflection emails</span>
+              <span className="text-sm">{t("settings.emails.toggle")}</span>
               <Switch
                 checked={!emailOptOut}
                 disabled={emailMutation.isPending || isPending}
                 onCheckedChange={(on) => emailMutation.mutate(!on)}
-                aria-label="Check-in and weekly reflection emails"
+                aria-label={t("settings.emails.toggle")}
               />
             </label>
           </section>
 
           <section className="surface-soft p-6">
-            <h2 className="text-lg">Your self-introduction</h2>
+            <h2 className="text-lg">{t("settings.intro.title")}</h2>
             <p className="mt-3 whitespace-pre-wrap text-muted-foreground">
-              {intro?.intro_text || "You haven't written an introduction yet."}
+              {intro?.intro_text || t("settings.intro.empty")}
             </p>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <Row label="Goals" value={(intro?.goals ?? []).join(", ") || "—"} />
-              <Row label="Stressors" value={(intro?.stressors ?? []).join(", ") || "—"} />
+              <Row label={t("settings.intro.goals")} value={(intro?.goals ?? []).join(", ") || "—"} />
+              <Row label={t("settings.intro.stressors")} value={(intro?.stressors ?? []).join(", ") || "—"} />
               <Row
-                label="Communication preference"
+                label={t("settings.intro.communication")}
                 value={intro?.communication_preference || "—"}
               />
-              <Row label="Topics to avoid" value={intro?.topics_to_avoid || "—"} />
+              <Row label={t("settings.intro.avoid")} value={intro?.topics_to_avoid || "—"} />
               <Row
-                label="Working with a professional"
-                value={intro?.in_professional_care ? "Yes" : "Not currently"}
+                label={t("settings.intro.professional")}
+                value={
+                  intro?.in_professional_care
+                    ? t("settings.intro.professionalYes")
+                    : t("settings.intro.professionalNo")
+                }
               />
-              <Row label="Shared diagnosis" value={intro?.existing_diagnosis || "—"} />
+              <Row label={t("settings.intro.diagnosis")} value={intro?.existing_diagnosis || "—"} />
             </div>
           </section>
 
           <section className="surface-soft p-6">
-            <h2 className="text-lg">Contact support</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Questions about your account, billing, a bug, or feedback for us? Send a message and
-              we'll reply right inside Kalm. For anything urgent about how you're feeling, use the
-              support resources page instead.
-            </p>
+            <h2 className="text-lg">{t("settings.support.title")}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{t("settings.support.body")}</p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Button asChild className="rounded-full">
-                <Link to="/support">Message support</Link>
+                <Link to="/support">{t("settings.support.message")}</Link>
               </Button>
               <Button asChild variant="secondary" className="rounded-full">
-                <Link to="/care">Support resources</Link>
+                <Link to="/care">{t("settings.support.resources")}</Link>
               </Button>
             </div>
           </section>
@@ -212,31 +206,28 @@ function SettingsPage() {
           <YourDataSection />
 
           <section className="surface-soft p-6">
-            <h2 className="text-lg">Delete your data</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              This removes every check-in and clears your self-introduction. Your account stays, so
-              you can start fresh whenever you want. This can't be undone.
-            </p>
+            <h2 className="text-lg">{t("settings.deleteData.title")}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{t("settings.deleteData.body")}</p>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" className="mt-5 rounded-full">
-                  Delete my check-ins &amp; introduction
+                  {t("settings.deleteData.button")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete your wellness data?</AlertDialogTitle>
+                  <AlertDialogTitle>{t("settings.deleteData.confirmTitle")}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Every mood check-in and your self-introduction will be permanently removed.
+                    {t("settings.deleteData.confirmBody")}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Keep my data</AlertDialogCancel>
+                  <AlertDialogCancel>{t("settings.deleteData.keep")}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={() => mutation.mutate()}
                     disabled={mutation.isPending}
                   >
-                    {mutation.isPending ? "Deleting…" : "Delete permanently"}
+                    {mutation.isPending ? t("settings.deleteData.deleting") : t("settings.deleteData.confirm")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -244,30 +235,22 @@ function SettingsPage() {
           </section>
 
           <section className="surface-soft border border-destructive/30 p-6">
-            <h2 className="text-lg text-destructive">Delete my account</h2>
+            <h2 className="text-lg text-destructive">{t("settings.deleteAccount.title")}</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              This is different from — and more permanent than — deleting your data above. It closes
-              your Kalm account entirely: you're signed out everywhere and can no longer sign back
-              in with this email. Your mood check-ins, habits, conversations, exercises and
-              self-introduction are permanently erased. This cannot be undone.
+              {t("settings.deleteAccount.body")}
             </p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Crisis safety records and admin support-audit entries are kept, with your identity
-              removed from them, as required by our data-retention policy.
-            </p>
+            <p className="mt-2 text-xs text-muted-foreground">{t("settings.deleteAccount.note")}</p>
             <AlertDialog onOpenChange={(open) => !open && setDeleteConfirmText("")}>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" className="mt-5 rounded-full">
-                  Delete my account
+                  {t("settings.deleteAccount.button")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Permanently delete your account?</AlertDialogTitle>
+                  <AlertDialogTitle>{t("settings.deleteAccount.confirmTitle")}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Your account, profile, conversations, check-ins, habits and exercise history
-                    will be permanently deleted. This is not the same as the data-wipe option — your
-                    account itself will no longer exist. Type <strong>DELETE</strong> to confirm.
+                    {t("settings.deleteAccount.confirmBody")}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <Input
@@ -277,13 +260,15 @@ function SettingsPage() {
                   autoComplete="off"
                 />
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Keep my account</AlertDialogCancel>
+                  <AlertDialogCancel>{t("settings.deleteAccount.keep")}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={() => accountDeletion.mutate()}
                     disabled={deleteConfirmText !== "DELETE" || accountDeletion.isPending}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
-                    {accountDeletion.isPending ? "Deleting…" : "Permanently delete my account"}
+                    {accountDeletion.isPending
+                      ? t("settings.deleteAccount.deleting")
+                      : t("settings.deleteAccount.confirm")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -291,9 +276,9 @@ function SettingsPage() {
           </section>
 
           <p className="text-sm text-muted-foreground">
-            Read the{" "}
+            {t("settings.legalPrefix")}{" "}
             <Link to="/legal" className="font-semibold text-primary underline underline-offset-4">
-              disclaimers and privacy notice
+              {t("settings.legalLink")}
             </Link>
             .
           </p>

@@ -128,7 +128,16 @@ button that opens the Stripe Customer Portal. Web actions go through
 Still missing on billing: the Stripe Customer Portal must be configured in the
 Stripe dashboard to allow switching across the four prices with proration.
 
+Languages: every member-facing page (landing, auth, reset-password, onboarding,
+chat, exercises, progress, habits, check-ins, care, support, plans, settings,
+Kalm-memory panel) reads its copy from `src/lib/i18n/locales/{en,ar,fr}.json`.
+Admin screens stay English on purpose. Voice notes and live calls run on the
+OpenAI account; when that account has no credits the app now says so explicitly
+instead of showing a generic failure. French/Arabic clinical copy still wants a
+native reviewer.
+
 Not built yet:
+
 
 - **Workplace/org tier** — `org_id` and `employer_eap` placeholders exist; no
   `organizations` table, admin dashboard, aggregate analytics, or seat management.
