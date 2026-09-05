@@ -491,5 +491,99 @@
     "dropped": "L'appel a été interrompu. Réessayez.",
     "micBlocked": "L'accès au microphone est bloqué. Autorisez-le dans les paramètres de votre navigateur.",
     "disclaimer": "Kalm est un compagnon IA, pas un thérapeute. En cas de crise, utilisez l'aide immédiate."
+  },
+  "settings": {
+    "title": "Votre profil et vos données",
+    "subtitle": "Tout ce que Kalm sait de vous, au même endroit.",
+    "account": "Compte",
+    "preferredName": "Prénom souhaité",
+    "mode": "Mode",
+    "aiPersonalization": "Personnalisation de l'IA",
+    "on": "Activée",
+    "off": "Désactivée",
+    "consentAccepted": "Consentement accepté",
+    "modes": {
+      "general": "Stress quotidien et humeur basse",
+      "condition": "Gérer un trouble diagnostiqué",
+      "teen": "Mode adolescent / étudiant",
+      "org_member": "Formule entreprise"
+    },
+    "emails": {
+      "title": "E-mails de Kalm",
+      "body": "De temps en temps, un message bienveillant et une réflexion hebdomadaire, envoyés à l'adresse de votre compte. Ils ne mentionnent jamais votre état émotionnel — juste une invitation à ouvrir l'application. Les e-mails de sécurité et de compte sont toujours envoyés.",
+      "toggle": "M'envoyer les messages de suivi et la réflexion hebdomadaire"
+    },
+    "intro": {
+      "title": "Votre présentation",
+      "empty": "Vous n'avez pas encore écrit de présentation.",
+      "goals": "Objectifs",
+      "stressors": "Sources de stress",
+      "communication": "Préférence de communication",
+      "avoid": "Sujets à éviter",
+      "professional": "Suivi par un professionnel",
+      "professionalYes": "Oui",
+      "professionalNo": "Pas actuellement",
+      "diagnosis": "Diagnostic partagé"
+    },
+    "support": {
+      "title": "Contacter l'assistance",
+      "body": "Une question sur votre compte, la facturation, un bug ou un retour à nous faire ? Envoyez un message et nous répondrons directement dans Kalm. Pour tout ce qui est urgent concernant votre état, utilisez plutôt la page des ressources de soutien.",
+      "message": "Écrire à l'assistance",
+      "resources": "Ressources de soutien"
+    },
+    "deleteData": {
+      "title": "Supprimer vos données",
+      "body": "Cela supprime tous vos bilans et effave votre présentation. Votre compte reste actif, vous pouvez donc repartir de zéro quand vous voulez. Cette action est irréversible.",
+      "button": "Supprimer mes bilans et ma présentation",
+      "confirmTitle": "Supprimer vos données de bien-être ?",
+      "confirmBody": "Tous vos bilans d'humeur et votre présentation seront définitivement supprimés.",
+      "keep": "Conserver mes données",
+      "deleting": "Suppression…",
+      "confirm": "Supprimer définitivement",
+      "done": "Vos bilans et votre présentation ont été supprimés.",
+      "error": "Nous n'avons pas pu supprimer cela pour le moment. Veuillez réessayer."
+    },
+    "deleteAccount": {
+      "title": "Supprimer mon compte",
+      "body": "C'est différent — et plus définitif — que la suppression des données ci-dessus. Cela ferme entièrement votre compte Kalm : vous êtes déconnecté partout et ne pourrez plus vous reconnecter avec cette adresse. Vos bilans d'humeur, habitudes, conversations, exercices et votre présentation sont effacés définitivement. Cette action est irréversible.",
+      "note": "Les dossiers de sécurité en situation de crise et les journaux d'audit de l'assistance sont conservés, sans votre identité, comme l'exige notre politique de conservation des données.",
+      "button": "Supprimer mon compte",
+      "confirmTitle": "Supprimer définitivement votre compte ?",
+      "confirmBody": "Votre compte, votre profil, vos conversations, vos bilans, vos habitudes et votre historique d'exercices seront supprimés définitivement. Ce n'est pas la même chose que l'effacement des données : votre compte lui-même n'existera plus. Tapez DELETE pour confirmer.",
+      "keep": "Conserver mon compte",
+      "deleting": "Suppression…",
+      "confirm": "Supprimer définitivement mon compte",
+      "done": "Votre compte a été supprimé.",
+      "error": "Nous n'avons pas pu supprimer votre compte pour le moment. Veuillez réessayer."
+    },
+    "saveError": "Nous n'avons pas pu enregistrer cela pour le moment. Veuillez réessayer.",
+    "legalPrefix": "Consultez les",
+    "legalLink": "avertissements et la notice de confidentialité"
+  },
+  "memory": {
+    "title": "Ce que Kalm retient de vous",
+    "body": "Pour reprendre là où vous vous êtes arrêté, Kalm s'écrit une courte note privée à la fin de chaque conversation — l'essentiel de ce dont vous avez parlé. C'est ainsi qu'il semble se souvenir de vous. Voici toutes les notes conservées. Supprimez ce que vous préférez qu'il oublie ; cela prend effet à votre prochaine conversation.",
+    "empty": "Rien pour l'instant — Kalm écrit sa première note après une ou deux conversations.",
+    "forget": "Oublier cette note",
+    "confirmTitle": "Oublier cette note ?",
+    "confirmBody": "Kalm cessera de l'utiliser dans les prochaines conversations. C'est irréversible, mais Kalm pourra écrire une nouvelle note après un futur échange.",
+    "keep": "La conserver",
+    "confirmForget": "Oublier",
+    "forgotten": "Oubliée. Kalm ne l'utilisera plus dans les prochaines conversations.",
+    "error": "Nous n'avons pas pu supprimer cela pour le moment. Veuillez réessayer."
+  },
+  "resetPassword": {
+    "title": "Choisir un nouveau mot de passe",
+    "needLink": "Ouvrez le lien de réinitialisation reçu par e-mail sur cet appareil pour continuer. Si le lien a expiré,",
+    "requestNew": "demandez-en un nouveau",
+    "newPassword": "Nouveau mot de passe",
+    "newPasswordPlaceholder": "Au moins 8 caractères",
+    "confirmPassword": "Confirmer le mot de passe",
+    "confirmPlaceholder": "Répétez votre nouveau mot de passe",
+    "submit": "Mettre à jour le mot de passe",
+    "tooShort": "Utilisez au moins 8 caractères",
+    "mismatch": "Les mots de passe ne correspondent pas",
+    "updated": "Mot de passe mis à jour",
+    "failed": "Impossible de mettre à jour votre mot de passe"
   }
 }
