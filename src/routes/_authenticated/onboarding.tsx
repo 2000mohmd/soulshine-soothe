@@ -88,20 +88,27 @@ function OnboardingPage() {
   const [avoid, setAvoid] = useState("");
   const [inCare, setInCare] = useState(false);
   const [mood, setMood] = useState<number | null>(null);
+  // "building" shows the plan-being-written screen, "ready" shows the plan.
+  const [phase, setPhase] = useState<"form" | "building" | "ready">("form");
+  const [plan, setPlan] = useState<{ plan: string | null; focus: string[] }>({
+    plan: null,
+    focus: [],
+  });
 
   const age = dob ? ageFromDateOfBirth(dob) : null;
   const ageOk = age !== null && age >= MIN_AGE;
   const isMinor = age !== null && age < MINOR_AGE;
 
   useEffect(() => {
-    if (data?.profile?.onboarding_completed) {
+    // Don't bounce to chat while we're showing this person their new plan.
+    if (phase === "form" && data?.profile?.onboarding_completed) {
       navigate({ to: "/chat", replace: true });
     }
     if (data?.profile?.preferred_name && !preferredName) {
       setPreferredName(data.profile.preferred_name);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+  }, [data, phase]);
 
   // Under-18 is locked to teen mode; the mode step reflects this but the server
   // is the authority.
