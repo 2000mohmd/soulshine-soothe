@@ -2,6 +2,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Languages } from "lucide-react";
 import { LANGUAGES, useTranslation, type Language } from "@/lib/i18n";
 import { setMyLanguage } from "@/lib/language.functions";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -12,20 +13,27 @@ import {
 
 /**
  * App-language picker. Updates the client immediately (cookie + localStorage +
- * <html lang/dir>) and, for signed-in users, persists to their profile. The
- * profile write is best-effort — it 401s for signed-out visitors on /auth,
- * which is fine.
+ * <html lang/dir>) and, for signed-in users, persists to their profile.
+ * Signed-out visitors keep the preference locally without calling the
+ * protected profile endpoint.
  */
 export function LanguageSwitcher({ className }: { className?: string }) {
   const { language, setLanguage, t } = useTranslation();
   const persist = useServerFn(setMyLanguage);
 
-  function handleChange(next: string) {
+  async function handleChange(next: string) {
     const lang = next as Language;
     setLanguage(lang);
-    void persist({ data: lang }).catch(() => {
-      // signed-out visitor, or a transient error — the cookie already carries it
-    });
+
+    const { data } = await supabase.auth.getSession();
+    if (!data.session?.access_token) return;
+
+    try {
+      await persist({ data: lang });
+    } catch {
+      // A session can expire between the check and write. The local preference
+      // remains valid and can be synced after the next successful sign-in.
+    }
   }
 
   return (
