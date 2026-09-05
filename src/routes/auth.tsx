@@ -45,6 +45,8 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [useMagicLink, setUseMagicLink] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
 
   async function handleForgotPassword() {
     const parsedEmail = z.string().trim().email().safeParse(email);
@@ -104,6 +106,27 @@ function AuthPage() {
     }
   }
 
+  async function handleMagicLink() {
+    const parsedEmail = z.string().trim().email("Enter a valid email address").safeParse(email);
+    if (!parsedEmail.success) {
+      toast.error(parsedEmail.error.issues[0]?.message ?? t("auth.checkDetails"));
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: parsedEmail.data,
+        options: { emailRedirectTo: `${window.location.origin}/auth` },
+      });
+      if (error) throw error;
+      setMagicLinkSent(true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("auth.genericError"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleOAuth(provider: "google" | "apple") {
     setBusy(true);
     const result = await lovable.auth.signInWithOAuth(provider, {
@@ -134,7 +157,19 @@ function AuthPage() {
           </Link>
 
           <div className="surface-soft p-7">
-            {emailSent ? (
+            {magicLinkSent ? (
+              <div className="space-y-3 text-center">
+                <h1 className="text-2xl">{t("auth.checkEmail")}</h1>
+                <p className="text-muted-foreground">{t("auth.magicLinkSent", { email })}</p>
+                <button
+                  type="button"
+                  onClick={() => setMagicLinkSent(false)}
+                  className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                >
+                  {t("auth.useDifferentEmail")}
+                </button>
+              </div>
+            ) : emailSent ? (
               <div className="space-y-3 text-center">
                 <h1 className="text-2xl">{t("auth.checkEmail")}</h1>
                 <p className="text-muted-foreground">{t("auth.confirmationSent", { email })}</p>
@@ -163,25 +198,39 @@ function AuthPage() {
                         placeholder="you@example.com"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`${mode}-password`}>{t("auth.passwordLabel")}</Label>
-                      <Input
-                        id={`${mode}-password`}
-                        type="password"
-                        autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                        placeholder={t("auth.passwordPlaceholder")}
-                      />
-                    </div>
+                    {!useMagicLink && (
+                      <div className="space-y-2">
+                        <Label htmlFor={`${mode}-password`}>{t("auth.passwordLabel")}</Label>
+                        <Input
+                          id={`${mode}-password`}
+                          type="password"
+                          autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                          value={password}
+                          onChange={(event) => setPassword(event.target.value)}
+                          placeholder={t("auth.passwordPlaceholder")}
+                        />
+                      </div>
+                    )}
                     <Button
                       className="w-full rounded-full"
                       disabled={busy}
-                      onClick={() => void handlePassword(mode)}
+                      onClick={() => void (useMagicLink ? handleMagicLink() : handlePassword(mode))}
                     >
-                      {mode === "signup" ? t("auth.createAccount") : t("auth.signIn")}
+                      {useMagicLink
+                        ? t("auth.sendMagicLink")
+                        : mode === "signup"
+                          ? t("auth.createAccount")
+                          : t("auth.signIn")}
                     </Button>
-                    {mode === "signin" && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => setUseMagicLink((current) => !current)}
+                      className="w-full text-center text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                    >
+                      {useMagicLink ? t("auth.usePasswordInstead") : t("auth.useMagicLinkInstead")}
+                    </button>
+                    {mode === "signin" && !useMagicLink && (
                       <button
                         type="button"
                         disabled={busy}
@@ -196,7 +245,7 @@ function AuthPage() {
               </Tabs>
             )}
 
-            {!emailSent && (
+            {!emailSent && !magicLinkSent && (
               <>
                 <div className="my-6 flex items-center gap-3 text-sm text-muted-foreground">
                   <span className="h-px flex-1 bg-border" />

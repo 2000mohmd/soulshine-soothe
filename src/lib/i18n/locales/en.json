@@ -59,7 +59,12 @@
     "termsLink": "terms and privacy notice",
     "termsSuffix": ". Kalm is wellness support, not therapy or emergency care.",
     "continueWithApple": "Continue with Apple",
-    "appleFailed": "Apple sign-in didn't complete. Please try again."
+    "appleFailed": "Apple sign-in didn't complete. Please try again.",
+    "magicLinkSent": "We sent a sign-in link to {{email}}. Open it on this device to continue — no password needed.",
+    "useMagicLinkInstead": "Email me a sign-in link instead",
+    "usePasswordInstead": "Use a password instead",
+    "sendMagicLink": "Send me a sign-in link",
+    "useDifferentEmail": "Use a different email"
   },
   "landing": {
     "headline": "A quieter place to check in with yourself.",

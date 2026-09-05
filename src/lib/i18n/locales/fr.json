@@ -59,7 +59,12 @@
     "termsLink": "conditions et notre avis de confidentialité",
     "termsSuffix": ". Kalm est un soutien au bien-être, pas une thérapie ni des soins d'urgence.",
     "continueWithApple": "Continuer avec Apple",
-    "appleFailed": "La connexion avec Apple n'a pas abouti. Veuillez réessayer."
+    "appleFailed": "La connexion avec Apple n'a pas abouti. Veuillez réessayer.",
+    "magicLinkSent": "Nous avons envoyé un lien de connexion à {{email}}. Ouvrez-le sur cet appareil pour continuer — aucun mot de passe requis.",
+    "useMagicLinkInstead": "M'envoyer un lien de connexion à la place",
+    "usePasswordInstead": "Utiliser un mot de passe à la place",
+    "sendMagicLink": "M'envoyer un lien de connexion",
+    "useDifferentEmail": "Utiliser une autre adresse e-mail"
   },
   "landing": {
     "headline": "Un espace plus calme pour faire le point avec vous-même.",
