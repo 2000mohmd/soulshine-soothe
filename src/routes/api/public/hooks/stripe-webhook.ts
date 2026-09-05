@@ -1,6 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { verifyStripeWebhook } from "@/lib/billing/stripe.server";
+import { fetchStripePrice, verifyStripeWebhook } from "@/lib/billing/stripe.server";
+import {
+  intervalFromStripe,
+  planFromEnvPriceId,
+  planFromLookupKey,
+} from "@/lib/billing/plans";
 
 // stripe_webhook_events/profiles' new billing columns are added by the
 // billing_and_checkin migration and aren't in the generated Database types
