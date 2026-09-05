@@ -136,12 +136,19 @@ function OnboardingPage() {
           baseline_tags: [],
         },
       }),
-    onSuccess: async () => {
+    onMutate: () => setPhase("building"),
+    onSuccess: async (result) => {
+      setPlan({
+        plan: result?.care_plan ?? null,
+        focus: result?.care_plan_focus ?? [],
+      });
+      setPhase("ready");
       await queryClient.invalidateQueries({ queryKey: ["my-profile"] });
-      toast.success(t("onboarding.saved"));
-      navigate({ to: "/chat", replace: true });
     },
-    onError: () => toast.error(t("onboarding.saveFailed")),
+    onError: () => {
+      setPhase("form");
+      toast.error(t("onboarding.saveFailed"));
+    },
   });
 
   const canContinue = [
@@ -150,6 +157,53 @@ function OnboardingPage() {
     preferredName.trim().length > 0,
     mood !== null,
   ][step];
+
+  if (phase !== "form") {
+    return (
+      <div className="flex min-h-screen flex-col breathe-gradient">
+        <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center px-5 py-12 text-center">
+          <span className="flex size-14 items-center justify-center rounded-3xl bg-secondary">
+            <KalmLogo className="size-7 text-primary" aria-hidden />
+          </span>
+          {phase === "building" ? (
+            <>
+              <h1 className="mt-6 font-display text-2xl">{t("onboarding.plan.buildingTitle")}</h1>
+              <p className="mt-3 max-w-sm text-sm text-muted-foreground">
+                {t("onboarding.plan.buildingBody")}
+              </p>
+              <Loader2 className="mt-6 size-5 animate-spin text-primary" aria-hidden />
+            </>
+          ) : (
+            <>
+              <h1 className="mt-6 font-display text-2xl">{t("onboarding.plan.readyTitle")}</h1>
+              <p className="mt-3 max-w-md whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+                {plan.plan ?? t("onboarding.plan.fallbackBody")}
+              </p>
+              {plan.focus.length > 0 && (
+                <ul className="mt-5 flex flex-wrap justify-center gap-2">
+                  {plan.focus.map((item) => (
+                    <li
+                      key={item}
+                      className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs"
+                    >
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <button
+                type="button"
+                onClick={() => navigate({ to: "/chat", replace: true })}
+                className="mt-8 rounded-full bg-primary px-6 py-2.5 text-sm text-primary-foreground"
+              >
+                {t("onboarding.plan.start")}
+              </button>
+            </>
+          )}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col breathe-gradient">
