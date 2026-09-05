@@ -533,7 +533,7 @@
     },
     "deleteData": {
       "title": "Supprimer vos données",
-      "body": "Cela supprime tous vos bilans et effave votre présentation. Votre compte reste actif, vous pouvez donc repartir de zéro quand vous voulez. Cette action est irréversible.",
+      "body": "Cela supprime tous vos bilans et efface votre présentation. Votre compte reste actif, vous pouvez donc repartir de zéro quand vous voulez. Cette action est irréversible.",
       "button": "Supprimer mes bilans et ma présentation",
       "confirmTitle": "Supprimer vos données de bien-être ?",
       "confirmBody": "Tous vos bilans d'humeur et votre présentation seront définitivement supprimés.",
