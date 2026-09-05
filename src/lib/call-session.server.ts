@@ -288,15 +288,19 @@ async function mintRealtimeSecret(
   if (!response.ok) {
     const body = await response.text();
     console.error("[calls] realtime secret failed", response.status, body.slice(0, 300));
+    const outOfCredits = body.includes("insufficient_quota") || body.includes("credit_balance");
     throw new CallSessionError(
-      response.status === 401
-        ? "The voice provider rejected the configured key."
-        : response.status === 429 || response.status === 402
-          ? "The voice provider is out of capacity or credits right now."
-          : "Couldn't start the voice session. Please try again.",
+      outOfCredits
+        ? "Voice calls are paused: the voice provider account has no credits left."
+        : response.status === 401
+          ? "The voice provider rejected the configured key."
+          : response.status === 429 || response.status === 402
+            ? "The voice provider is out of capacity or credits right now."
+            : "Couldn't start the voice session. Please try again.",
       502,
     );
   }
+
 
   const payload = (await response.json()) as {
     value?: string;

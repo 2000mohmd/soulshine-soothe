@@ -39,14 +39,18 @@ export async function transcribeAudioCore(input: { audio_base64: string; mime_ty
   if (!response.ok) {
     const body = await response.text();
     console.error("openai transcription failed", response.status, body.slice(0, 300));
+    const outOfCredits = body.includes("insufficient_quota") || body.includes("credit_balance");
     throw new VoiceError(
-      response.status === 401
-        ? "The voice provider rejected the configured key."
-        : response.status === 429 || response.status === 402
-          ? "Too many voice notes right now — try again in a moment."
-          : "Couldn't understand that recording. Try again or type instead.",
+      outOfCredits
+        ? "Voice messages are paused: the voice provider account has no credits left."
+        : response.status === 401
+          ? "The voice provider rejected the configured key."
+          : response.status === 429 || response.status === 402
+            ? "Too many voice notes right now — try again in a moment."
+            : "Couldn't understand that recording. Try again or type instead.",
     );
   }
+
 
   const payload = (await response.json()) as { text?: string | null };
   const text = (payload.text ?? "").trim();
