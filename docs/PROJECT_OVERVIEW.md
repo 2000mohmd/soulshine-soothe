@@ -174,6 +174,20 @@ Recently built (was on this list):
 - **Mobile API** — versioned HTTP surface under `src/routes/api/v1/*` with a
   bearer-token auth bridge (`src/lib/api-auth.server.ts`); full contract in
   `docs/MOBILE_API.md`.
+- **Onboarding care plan + reliable completion** — `completeOnboardingCore` now
+  **upserts** `profiles` (an update-only write matched zero rows for accounts with
+  no profile row yet, so `onboarding_completed` stayed false and the person was
+  bounced back to step 1 of the form). After saving, `src/lib/care-plan.server.ts`
+  asks the companion model for a short internal orientation note (4-6 sentences +
+  2-4 focus areas, written in the member's language) and stores it on
+  `user_profiles.care_plan` / `care_plan_focus` / `care_plan_updated_at`. That note
+  is read into `CompanionContext.carePlan` by chat, nudges, calls and activity
+  reactions, and injected into the system prompt as internal context the companion
+  must never quote. It is non-clinical by construction: the prompt forbids naming
+  or inferring a condition, medication or risk rating, and only uses what the person
+  said. Generation **fails open** — with no `OPENROUTER_API_KEY` the plan is simply
+  absent and onboarding still completes.
+
 
 ## 7. Known risks / review areas for an outside reviewer
 

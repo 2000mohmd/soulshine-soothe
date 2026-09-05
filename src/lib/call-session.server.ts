@@ -129,7 +129,7 @@ async function loadCallContext(
     supabase
       .from("user_profiles")
       .select(
-        "intro_text, goals, stressors, communication_preference, topics_to_avoid, in_professional_care",
+        "intro_text, care_plan, goals, stressors, communication_preference, topics_to_avoid, in_professional_care",
       )
       .eq("user_id", userId)
       .maybeSingle(),
@@ -147,6 +147,7 @@ async function loadCallContext(
     preferredName: profile.data?.preferred_name ?? null,
     accountType: profile.data?.account_type ?? null,
     introText: up?.intro_text ?? null,
+    carePlan: up?.care_plan ?? null,
     goals: up?.goals ?? [],
     stressors: up?.stressors ?? [],
     communicationPreference: up?.communication_preference ?? null,

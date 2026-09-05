@@ -67,7 +67,7 @@ export async function evaluateNudgesFor(supabase: Client, userId: string) {
       supabase
         .from("user_profiles")
         .select(
-          "intro_text, goals, stressors, communication_preference, topics_to_avoid, in_professional_care",
+          "intro_text, care_plan, goals, stressors, communication_preference, topics_to_avoid, in_professional_care",
         )
         .eq("user_id", userId)
         .maybeSingle(),
@@ -184,6 +184,7 @@ export async function evaluateNudgesFor(supabase: Client, userId: string) {
     preferredName: profile.data?.preferred_name ?? null,
     accountType: profile.data?.account_type ?? null,
     introText: consented ? (intro.data?.intro_text ?? null) : null,
+    carePlan: consented ? (intro.data?.care_plan ?? null) : null,
     goals: consented ? (intro.data?.goals ?? []) : [],
     stressors: consented ? (intro.data?.stressors ?? []) : [],
     communicationPreference: intro.data?.communication_preference ?? null,
