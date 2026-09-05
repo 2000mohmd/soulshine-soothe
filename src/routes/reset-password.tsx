@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SafetyFooter } from "@/components/SafetyFooter";
+import { useTranslation } from "@/lib/i18n";
 
 export const Route = createFileRoute("/reset-password")({
   ssr: false,
@@ -35,6 +36,7 @@ export const Route = createFileRoute("/reset-password")({
 });
 
 function ResetPasswordPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -53,21 +55,21 @@ function ResetPasswordPage() {
 
   async function handleSubmit() {
     if (password.length < 8) {
-      toast.error("Use at least 8 characters");
+      toast.error(t("resetPassword.tooShort"));
       return;
     }
     if (password !== confirm) {
-      toast.error("Passwords don't match");
+      toast.error(t("resetPassword.mismatch"));
       return;
     }
     setBusy(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      toast.success("Password updated");
+      toast.success(t("resetPassword.updated"));
       navigate({ to: "/chat", replace: true });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Couldn't update your password");
+      toast.error(error instanceof Error ? error.message : t("resetPassword.failed"));
     } finally {
       setBusy(false);
     }
@@ -86,37 +88,37 @@ function ResetPasswordPage() {
           </Link>
 
           <div className="surface-soft space-y-4 p-7">
-            <h1 className="text-2xl">Set a new password</h1>
+            <h1 className="text-2xl">{t("resetPassword.title")}</h1>
             {!ready ? (
               <p className="text-muted-foreground">
-                Open the reset link from your email on this device to continue. If the link expired,{" "}
+                {t("resetPassword.needLink")}{" "}
                 <Link to="/auth" className="text-primary underline underline-offset-4">
-                  request a new one
+                  {t("resetPassword.requestNew")}
                 </Link>
                 .
               </p>
             ) : (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">New password</Label>
+                  <Label htmlFor="new-password">{t("resetPassword.newPassword")}</Label>
                   <Input
                     id="new-password"
                     type="password"
                     autoComplete="new-password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    placeholder="At least 8 characters"
+                    placeholder={t("resetPassword.newPasswordPlaceholder")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm password</Label>
+                  <Label htmlFor="confirm-password">{t("resetPassword.confirmPassword")}</Label>
                   <Input
                     id="confirm-password"
                     type="password"
                     autoComplete="new-password"
                     value={confirm}
                     onChange={(event) => setConfirm(event.target.value)}
-                    placeholder="Repeat your new password"
+                    placeholder={t("resetPassword.confirmPlaceholder")}
                   />
                 </div>
                 <Button
@@ -124,7 +126,7 @@ function ResetPasswordPage() {
                   disabled={busy}
                   onClick={() => void handleSubmit()}
                 >
-                  Update password
+                  {t("resetPassword.submit")}
                 </Button>
               </>
             )}
