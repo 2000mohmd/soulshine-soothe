@@ -26,7 +26,8 @@
     "expandSidebar": "Expand sidebar",
     "newConversation": "New conversation",
     "recents": "Recents",
-    "yourAccount": "Your account"
+    "yourAccount": "Your account",
+    "plans": "Plans"
   },
   "language": {
     "sectionTitle": "Language",
@@ -412,5 +413,66 @@
     "preparing": "Preparing…",
     "downloadReport": "Download a report to share",
     "reportDescription": "A readable summary of your mood trend, check-in history with severity bands, and exercises completed — suitable for sharing with a therapist. It's a self-tracking summary, not a clinical assessment."
+  },
+  "plans": {
+    "title": "Plans and billing",
+    "subtitle": "Pick the pace that fits. Change or cancel any time — nothing you've written is ever locked behind a plan.",
+    "free": "Free",
+    "currentPlan": "Current plan",
+    "manage": "Manage billing",
+    "choose": "Choose {{plan}}",
+    "checkoutFailed": "We couldn't start checkout",
+    "portalFailed": "We couldn't open your billing page",
+    "noSubscription": "You don't have a paid plan yet — choose one above to get started.",
+    "successTitle": "You're all set",
+    "successBody": "Your plan is active. If the new limits aren't showing yet, give it a moment and refresh.",
+    "cancelled": "No problem — nothing was charged. You can pick a plan whenever you're ready.",
+    "yearlyHint": "Yearly: two months free",
+    "usageTitle": "Where you are right now",
+    "usageMessages": "Messages today",
+    "usageCalls": "Voice calls this week",
+    "usageCallsNone": "Not included on your plan",
+    "nextCall": "Your next voice call is available on {{date}}.",
+    "contactSupport": "Ask us a question",
+    "interval": {
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "per": {
+      "monthly": "/ month",
+      "yearly": "/ year"
+    },
+    "tiers": {
+      "free": {
+        "name": "Free",
+        "tagline": "A gentle place to start.",
+        "features": {
+          "messages": "8 companion messages a day",
+          "calls": "No voice calls",
+          "tracking": "Mood, habits, exercises and check-ins"
+        }
+      },
+      "pro": {
+        "name": "Pro",
+        "tagline": "Daily support, with a voice call each week.",
+        "features": {
+          "messages": "200 companion messages a day",
+          "calls": "One 30-minute voice call a week",
+          "history": "Full conversation history",
+          "export": "Shareable progress report"
+        }
+      },
+      "premium": {
+        "name": "Premium",
+        "tagline": "For the weeks that need more.",
+        "features": {
+          "messages": "Effectively unlimited messages (500 a day)",
+          "calls": "Two 30-minute voice calls a week",
+          "history": "Full conversation history",
+          "export": "Shareable progress report",
+          "priority": "Priority support replies"
+        }
+      }
+    }
   }
 }

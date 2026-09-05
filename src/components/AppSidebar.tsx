@@ -1,7 +1,16 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { LineChart, LogOut, MessageCircle, PanelLeft, Plus, Settings, Wind } from "lucide-react";
+import {
+  LineChart,
+  LogOut,
+  MessageCircle,
+  PanelLeft,
+  Plus,
+  Settings,
+  Sparkles,
+  Wind,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { KalmLogo } from "@/components/KalmLogo";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,8 +22,10 @@ export const SIDEBAR_NAV = [
   { to: "/chat", labelKey: "nav.companion", icon: MessageCircle },
   { to: "/insights", labelKey: "nav.progress", icon: LineChart },
   { to: "/exercises", labelKey: "nav.exercises", icon: Wind },
+  { to: "/plans", labelKey: "nav.plans", icon: Sparkles },
   { to: "/settings", labelKey: "nav.profile", icon: Settings },
 ] as const;
+
 
 type AppSidebarProps = {
   open: boolean;
