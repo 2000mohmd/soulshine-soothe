@@ -120,6 +120,7 @@ export async function completeOnboardingCore(
     // The AI writes a short orientation plan from what they just told us, so
     // chat, nudges, calls and reactions all start out knowing who they are.
     let carePlan: string | null = null;
+    let carePlanFocus: string[] = [];
     try {
       const { generateAndStoreCarePlan } = await import("./care-plan.server");
       const language = (
@@ -138,6 +139,7 @@ export async function completeOnboardingCore(
         language: language ?? "en",
       });
       carePlan = generated?.plan ?? null;
+      carePlanFocus = generated?.focus ?? [];
     } catch (error) {
       console.error("care plan step failed", error);
     }
@@ -194,7 +196,7 @@ export async function completeOnboardingCore(
       console.error("welcome message generation failed", error);
     }
 
-    return { ok: true };
+    return { ok: true, care_plan: carePlan, care_plan_focus: carePlanFocus };
   }
 }
 

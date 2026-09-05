@@ -25,7 +25,7 @@ a separate mobile app is intended to consume the same backend later.
 | Styling       | Tailwind v4 tokens in `src/styles.css` (Soft Glass lavender/blue-violet oklch palette, frosted surfaces, Fraunces + Nunito Sans)                                                                                                                                                                                                                                                                                                                                          |
 | Branding      | Shared `KalmLogo` abstract four-petal bloom used across landing, auth, onboarding, chat, and the collapsible member rail                                                                                                                                                                                                                                                                                                                                                   |
 | UI kit        | shadcn/ui + Radix, lucide icons, recharts, sonner                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| LLM           | Provider layer in `src/lib/llm-provider.server.ts`: **OpenRouter only** (`OPENROUTER_API_KEY`, OpenAI-compatible) serving `anthropic/claude-sonnet-4.5` (companion, summaries, digests) and `anthropic/claude-haiku-4.5` (crisis classifier). Native tool use, streaming supported. No Lovable AI gateway, no direct Anthropic API call. Speech-to-text also goes through OpenRouter (`google/gemini-2.5-flash` audio input). |
+| LLM           | Provider layer in `src/lib/llm-provider.server.ts`: **OpenRouter only** (`OPENROUTER_API_KEY`, OpenAI-compatible) serving `anthropic/claude-sonnet-4.5` (companion, summaries, digests) and `anthropic/claude-haiku-4.5` (crisis classifier). Native tool use, streaming supported. No Lovable AI gateway, no direct Anthropic API call. Speech-to-text and live voice calls run on **OpenAI** (`OPENAI_API_KEY`): `gpt-4o-mini-transcribe` for voice notes, `gpt-realtime` for calls. |
 | Runtime       | Cloudflare Worker (edge); no Node-only packages                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 ## 3. Routes
@@ -132,8 +132,6 @@ Not built yet:
 
 - **Workplace/org tier** — `org_id` and `employer_eap` placeholders exist; no
   `organizations` table, admin dashboard, aggregate analytics, or seat management.
-- **Live avatar/voice sessions** — no `live_sessions` table, no provider chosen,
-  no real-time transcript crisis checks.
 - **Data export as PDF** — a downloadable report exists
   (`src/lib/data-export.functions.ts` → `buildMyReport`, surfaced in
   `YourDataSection`), but as plain **.txt**, not the therapist-shareable **PDF**
@@ -154,9 +152,22 @@ Not built yet:
 Recently built (was on this list):
 
 - **Voice notes** — the chat mic records, converts to mono 16 kHz WAV in the
-  browser, and transcribes server-side through OpenRouter (Gemini audio input).
-  OpenRouter is the only provider; with no credits the user sees a "needs
-  credits" message instead of a silent failure.
+  browser, and transcribes server-side through **OpenAI**
+  (`gpt-4o-mini-transcribe`, `OPENAI_API_KEY`) so all voice — notes and live
+  calls — runs on one provider. Failures surface as a plain message.
+
+- **Live voice calls (end to end)** — the backend session API
+  (`src/lib/call-session.server.ts`, `/api/v1/calls/*`, OpenAI Realtime) now has a
+  UI: a "Start a voice call" button in the chat header opens
+  `src/components/VoiceCallOverlay.tsx`, which starts a session, connects over
+  WebRTC with the short-lived client secret, shows a live timer, and ends the
+  session on hang-up so duration, transcript turns and cost are stored. Tier gating
+  and the rolling weekly call allowance are enforced server-side.
+
+- **"Creating your plan" screen** — finishing onboarding no longer jumps straight
+  to chat: `completeOnboarding` returns the generated plan, and the last step shows
+  a "putting your plan together" state, then the plan text plus focus chips and a
+  "Start talking" button.
 
 - **Tier-aware message caps** — see "Billing / payments" above.
 

@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 import { KalmLogo } from "@/components/KalmLogo";
 import { completeOnboarding, getMyProfile } from "@/lib/onboarding.functions";
 import { Button } from "@/components/ui/button";
@@ -88,20 +88,27 @@ function OnboardingPage() {
   const [avoid, setAvoid] = useState("");
   const [inCare, setInCare] = useState(false);
   const [mood, setMood] = useState<number | null>(null);
+  // "building" shows the plan-being-written screen, "ready" shows the plan.
+  const [phase, setPhase] = useState<"form" | "building" | "ready">("form");
+  const [plan, setPlan] = useState<{ plan: string | null; focus: string[] }>({
+    plan: null,
+    focus: [],
+  });
 
   const age = dob ? ageFromDateOfBirth(dob) : null;
   const ageOk = age !== null && age >= MIN_AGE;
   const isMinor = age !== null && age < MINOR_AGE;
 
   useEffect(() => {
-    if (data?.profile?.onboarding_completed) {
+    // Don't bounce to chat while we're showing this person their new plan.
+    if (phase === "form" && data?.profile?.onboarding_completed) {
       navigate({ to: "/chat", replace: true });
     }
     if (data?.profile?.preferred_name && !preferredName) {
       setPreferredName(data.profile.preferred_name);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+  }, [data, phase]);
 
   // Under-18 is locked to teen mode; the mode step reflects this but the server
   // is the authority.
@@ -129,12 +136,19 @@ function OnboardingPage() {
           baseline_tags: [],
         },
       }),
-    onSuccess: async () => {
+    onMutate: () => setPhase("building"),
+    onSuccess: async (result) => {
+      setPlan({
+        plan: result?.care_plan ?? null,
+        focus: result?.care_plan_focus ?? [],
+      });
+      setPhase("ready");
       await queryClient.invalidateQueries({ queryKey: ["my-profile"] });
-      toast.success(t("onboarding.saved"));
-      navigate({ to: "/chat", replace: true });
     },
-    onError: () => toast.error(t("onboarding.saveFailed")),
+    onError: () => {
+      setPhase("form");
+      toast.error(t("onboarding.saveFailed"));
+    },
   });
 
   const canContinue = [
@@ -143,6 +157,53 @@ function OnboardingPage() {
     preferredName.trim().length > 0,
     mood !== null,
   ][step];
+
+  if (phase !== "form") {
+    return (
+      <div className="flex min-h-screen flex-col breathe-gradient">
+        <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center px-5 py-12 text-center">
+          <span className="flex size-14 items-center justify-center rounded-3xl bg-secondary">
+            <KalmLogo className="size-7 text-primary" aria-hidden />
+          </span>
+          {phase === "building" ? (
+            <>
+              <h1 className="mt-6 font-display text-2xl">{t("onboarding.plan.buildingTitle")}</h1>
+              <p className="mt-3 max-w-sm text-sm text-muted-foreground">
+                {t("onboarding.plan.buildingBody")}
+              </p>
+              <Loader2 className="mt-6 size-5 animate-spin text-primary" aria-hidden />
+            </>
+          ) : (
+            <>
+              <h1 className="mt-6 font-display text-2xl">{t("onboarding.plan.readyTitle")}</h1>
+              <p className="mt-3 max-w-md whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+                {plan.plan ?? t("onboarding.plan.fallbackBody")}
+              </p>
+              {plan.focus.length > 0 && (
+                <ul className="mt-5 flex flex-wrap justify-center gap-2">
+                  {plan.focus.map((item) => (
+                    <li
+                      key={item}
+                      className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs"
+                    >
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <button
+                type="button"
+                onClick={() => navigate({ to: "/chat", replace: true })}
+                className="mt-8 rounded-full bg-primary px-6 py-2.5 text-sm text-primary-foreground"
+              >
+                {t("onboarding.plan.start")}
+              </button>
+            </>
+          )}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col breathe-gradient">

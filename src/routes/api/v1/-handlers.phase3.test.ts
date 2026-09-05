@@ -95,7 +95,7 @@ describe("handleOnboarding", () => {
   it("completes for an adult and computes age server-side (no client age flag)", async () => {
     const res = await post({ ...base, date_of_birth: dobForAge(30) });
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true });
+    expect(await res.json()).toMatchObject({ ok: true });
 
     const row = profileUpdate();
     expect(row).toBeTruthy();

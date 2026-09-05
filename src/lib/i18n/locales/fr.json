@@ -202,6 +202,13 @@
       "3": "Correct",
       "4": "Bien",
       "5": "Très bien"
+    },
+    "plan": {
+      "buildingTitle": "Nous préparons votre plan",
+      "buildingBody": "Kalm relit ce que vous avez partagé et rédige un court plan de départ — cela prend quelques secondes.",
+      "readyTitle": "Voici votre plan de départ",
+      "fallbackBody": "Votre plan se précisera au fil de vos échanges avec Kalm. Pour l'instant, tout ce que vous avez partagé est enregistré.",
+      "start": "Commencer à parler"
     }
   },
   "insights": {
@@ -474,5 +481,15 @@
         }
       }
     }
+  },
+  "call": {
+    "start": "Démarrer un appel vocal",
+    "connecting": "Connexion de votre appel…",
+    "live": "Vous êtes en appel — parlez simplement.",
+    "end": "Terminer l'appel",
+    "startFailed": "Impossible de démarrer l'appel pour le moment.",
+    "dropped": "L'appel a été interrompu. Réessayez.",
+    "micBlocked": "L'accès au microphone est bloqué. Autorisez-le dans les paramètres de votre navigateur.",
+    "disclaimer": "Kalm est un compagnon IA, pas un thérapeute. En cas de crise, utilisez l'aide immédiate."
   }
 }
