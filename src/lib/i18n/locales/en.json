@@ -202,6 +202,13 @@
       "3": "Okay",
       "4": "Good",
       "5": "Great"
+    },
+    "plan": {
+      "buildingTitle": "Putting your plan together",
+      "buildingBody": "Kalm is reading what you shared and writing a short starting plan — this takes a few seconds.",
+      "readyTitle": "Here's your starting plan",
+      "fallbackBody": "Your plan will fill in as you talk with Kalm. For now, everything you shared is saved and Kalm already knows it.",
+      "start": "Start talking"
     }
   },
   "insights": {
@@ -474,5 +481,15 @@
         }
       }
     }
+  },
+  "call": {
+    "start": "Start a voice call",
+    "connecting": "Connecting your call…",
+    "live": "You're on a call — just talk.",
+    "end": "End call",
+    "startFailed": "Couldn't start the call right now.",
+    "dropped": "The call dropped. Try again.",
+    "micBlocked": "Microphone access is blocked. Allow it in your browser settings.",
+    "disclaimer": "Kalm is an AI companion, not a therapist. In a crisis, use immediate support."
   }
 }
