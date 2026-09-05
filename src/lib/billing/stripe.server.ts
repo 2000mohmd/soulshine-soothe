@@ -13,11 +13,32 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const STRIPE_API = "https://api.stripe.com/v1";
+// Managed-connection fallback: when there is no own STRIPE_SECRET_KEY, the same
+// REST calls are proxied through Lovable's connector gateway, which attaches the
+// real Stripe secret. STRIPE_SANDBOX_API_KEY / STRIPE_LIVE_API_KEY are gateway
+// connection identifiers, not Stripe keys.
+const GATEWAY_API = "https://connector-gateway.lovable.dev/stripe/v1";
 
-function secretKey(): string {
-  const key = process.env["STRIPE_SECRET_KEY"];
-  if (!key) throw new Error("Stripe is not configured yet (STRIPE_SECRET_KEY is unset).");
-  return key;
+type Transport = { base: string; headers: Record<string, string> };
+
+function transport(): Transport {
+  const own = process.env["STRIPE_SECRET_KEY"];
+  if (own) return { base: STRIPE_API, headers: { Authorization: `Bearer ${own}` } };
+
+  const connectionKey =
+    process.env["STRIPE_LIVE_API_KEY"] ?? process.env["STRIPE_SANDBOX_API_KEY"] ?? null;
+  const lovableKey = process.env["LOVABLE_API_KEY"] ?? null;
+  if (connectionKey && lovableKey) {
+    return {
+      base: GATEWAY_API,
+      headers: {
+        Authorization: `Bearer ${connectionKey}`,
+        "X-Connection-Api-Key": connectionKey,
+        "Lovable-API-Key": lovableKey,
+      },
+    };
+  }
+  throw new Error("Stripe is not configured yet (no STRIPE_SECRET_KEY or managed connection).");
 }
 
 /** Stripe's API takes classic `application/x-www-form-urlencoded`, including for nested objects. */
@@ -34,10 +55,11 @@ async function stripeRequest<T>(
   path: string,
   params?: Record<string, string | number | undefined>,
 ): Promise<T> {
-  const response = await fetch(`${STRIPE_API}${path}`, {
+  const { base, headers } = transport();
+  const response = await fetch(`${base}${path}`, {
     method,
     headers: {
-      Authorization: `Bearer ${secretKey()}`,
+      ...headers,
       "Content-Type": "application/x-www-form-urlencoded",
       // Pin an API version so Stripe dashboard upgrades never silently change
       // this integration's request/response shape underneath us.
@@ -54,6 +76,43 @@ async function stripeRequest<T>(
   }
   return payload;
 }
+
+export type StripePrice = {
+  id: string;
+  lookup_key?: string | null;
+  recurring?: { interval?: string | null } | null;
+};
+
+/**
+ * The Stripe Price id for a plan + interval: the pinned env var when set,
+ * otherwise resolved from the Price `lookup_key` (stable across test and live).
+ */
+export async function resolvePlanPriceId(
+  plan: PaidPlan,
+  interval: BillingInterval,
+): Promise<string> {
+  const pinned = planPriceIdFromEnv(plan, interval);
+  if (pinned) return pinned;
+
+  const lookupKey = planLookupKey(plan, interval);
+  const found = await stripeRequest<{ data: StripePrice[] }>(
+    "GET",
+    `/prices?active=true&limit=1&lookup_keys[0]=${encodeURIComponent(lookupKey)}`,
+  );
+  const price = found.data?.[0];
+  if (!price?.id) {
+    throw new Error(
+      `No Stripe price found for ${plan} ${interval} (lookup_key "${lookupKey}"). Set ${plan === "pro" ? "STRIPE_PRO" : "STRIPE_PREMIUM"}_${interval.toUpperCase()}_PRICE_ID or create the price.`,
+    );
+  }
+  return price.id;
+}
+
+/** Fetches a Price so a webhook can derive plan + billing interval from it. */
+export async function fetchStripePrice(priceId: string): Promise<StripePrice> {
+  return stripeRequest<StripePrice>("GET", `/prices/${priceId}`);
+}
+
 
 export type StripeCustomer = { id: string; email: string | null };
 
