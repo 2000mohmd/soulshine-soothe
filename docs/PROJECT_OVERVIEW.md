@@ -50,7 +50,9 @@ API: `src/routes/api/public/hooks/evaluate-nudges.ts` — cron/webhook nudge swe
 ## 4. Data model (Postgres, all RLS-scoped to `auth.uid()`)
 
 - `profiles` — preferred_name, `account_type` (general | condition | teen | org_member),
-  `subscription_tier` (free | premium | org), org_id, consent flags, onboarding_completed.
+  `subscription_tier` (free | pro | premium | org), Stripe billing fields
+  (`stripe_customer_id`, `stripe_subscription_id`, `stripe_subscription_status`,
+  `stripe_price_id`, `stripe_billing_interval`, `subscription_current_period_end`), org_id, consent flags, onboarding_completed.
 - `user_profiles` — self-introduction: intro_text, goals[], stressors[],
   existing_diagnosis, communication_preference, topics_to_avoid, in_professional_care.
 - `mood_logs` — score 1-5, note, tags[], is_baseline.
@@ -104,13 +106,25 @@ Built: Phases 1-3 (auth/onboarding/design system, tracking + chat + crisis middl
 exercises + screeners + nudges + care pathway) and Phase 4.2/4.3 (Claude tool-calling,
 session-like chat behavior, in-chat guided exercises, commitments, effectiveness insights).
 
+Also built (billing + tiers): four tiers — free (8 messages/day, no voice),
+pro (200/day, 1 voice call per rolling 7 days), premium (500/day ceiling marketed
+as unlimited, 2 calls per 7 days), org (same ceilings as premium). Caps and the
+call allowance have one source of truth in `src/lib/chat-limits.ts`, enforced by
+the chat rate limiter and by `src/lib/call-session.server.ts` (over-limit call
+attempts return 429 with the next available date). Stripe test products
+"Calm AI Pro" ($18/mo, $180/yr) and "Calm AI Premium" ($50/mo, $500/yr) exist;
+`POST /api/v1/billing/checkout` takes `{ plan, interval }`, and the Stripe
+webhook derives both tier and interval from the subscription's price and stores
+them on `profiles`. Per-call cost is written to
+`call_sessions.estimated_cost_usd`, and `GET /api/v1/admin/users/:userId/cost`
+(admin-only) reports tier, interval, chat cost, voice cost and combined cost.
+
+Still missing on billing: the member-facing pricing/upgrade UI for Pro, and the
+Stripe Customer Portal must be configured in the Stripe dashboard to allow
+switching across the four prices with proration.
+
 Not built yet:
 
-- **Billing / payments** — the daily message cap IS now tier-aware and enforced
-  (free 8/day, premium/org high cap; one source of truth in
-  `src/lib/chat-limits.ts`, surfaced by `GET /api/v1/entitlements`). What's still
-  missing: Stripe / receipt validation to actually _move_ someone between tiers,
-  and any minute allowances for live sessions.
 - **Workplace/org tier** — `org_id` and `employer_eap` placeholders exist; no
   `organizations` table, admin dashboard, aggregate analytics, or seat management.
 - **Live avatar/voice sessions** — no `live_sessions` table, no provider chosen,
