@@ -11,6 +11,12 @@
 // error rather than silently no-opping.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  planLookupKey,
+  planPriceIdFromEnv,
+  type BillingInterval,
+  type PaidPlan,
+} from "./plans";
 
 const STRIPE_API = "https://api.stripe.com/v1";
 // Managed-connection fallback: when there is no own STRIPE_SECRET_KEY, the same
