@@ -88,18 +88,56 @@ async function handleStripeEvent(
         customer: string;
         status: string;
         current_period_end: number;
-        items: { data: { price: { id: string } }[] };
+        items: {
+          data: {
+            price: {
+              id: string;
+              lookup_key?: string | null;
+              recurring?: { interval?: string | null } | null;
+            };
+          }[];
+        };
         metadata?: { user_id?: string };
       };
 
-      const tier =
-        subscription.status === "active" || subscription.status === "trialing" ? "premium" : "free";
+      const price = subscription.items?.data?.[0]?.price ?? null;
+      const active = subscription.status === "active" || subscription.status === "trialing";
+
+      // Which plan and cadence the subscription is ACTUALLY on. The price object
+      // is expanded in the event payload, so lookup_key ("pro_yearly") and
+      // recurring.interval are usually right here; fall back to the pinned env
+      // ids, then to a Stripe fetch, before giving up.
+      let resolved = planFromLookupKey(price?.lookup_key) ?? planFromEnvPriceId(price?.id ?? null);
+      let interval = resolved?.interval ?? intervalFromStripe(price?.recurring?.interval ?? null);
+
+      if (!resolved && price?.id) {
+        try {
+          const fetched = await fetchStripePrice(price.id);
+          resolved = planFromLookupKey(fetched.lookup_key);
+          interval = resolved?.interval ?? intervalFromStripe(fetched.recurring?.interval ?? null);
+        } catch (err) {
+          console.error("stripe webhook: could not fetch price", price.id, err);
+        }
+      }
+
+      if (active && !resolved) {
+        // Don't silently downgrade a paying customer because we couldn't map the
+        // price — keep them premium (the more generous of the two) and shout.
+        console.error(
+          "stripe webhook: active subscription on an unrecognised price",
+          price?.id,
+          price?.lookup_key,
+        );
+      }
+
+      const tier = active ? (resolved?.plan ?? "premium") : "free";
 
       const update = {
         stripe_subscription_id:
           event.type === "customer.subscription.deleted" ? null : subscription.id,
         stripe_subscription_status: subscription.status,
-        stripe_price_id: subscription.items?.data?.[0]?.price?.id ?? null,
+        stripe_price_id: price?.id ?? null,
+        stripe_billing_interval: active ? (interval ?? null) : null,
         subscription_current_period_end: new Date(
           subscription.current_period_end * 1000,
         ).toISOString(),
@@ -124,6 +162,7 @@ async function handleStripeEvent(
       }
       break;
     }
+
 
     case "checkout.session.completed": {
       // Authoritative tier update happens on the subscription events above,
