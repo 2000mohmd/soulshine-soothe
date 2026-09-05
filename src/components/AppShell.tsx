@@ -13,16 +13,35 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   // For signed-in users the profile is the source of truth for language.
+  // Signed-out visitors have no bearer token, so skip the fetch entirely.
   const { t, language, setLanguage } = useTranslation();
+  const [signedIn, setSignedIn] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (active) setSignedIn(Boolean(data.session?.access_token));
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSignedIn(Boolean(session?.access_token));
+    });
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
   const fetchLanguage = useServerFn(getMyLanguage);
   const { data: storedLanguage } = useQuery({
     queryKey: ["my-language"],
-    queryFn: () => fetchLanguage(),
+    queryFn: () => fetchLanguage().catch(() => null),
+    enabled: signedIn,
+    retry: false,
     staleTime: 5 * 60 * 1000,
   });
   useEffect(() => {
     if (storedLanguage && storedLanguage !== language) setLanguage(storedLanguage);
   }, [storedLanguage, language, setLanguage]);
+
 
   return (
     <div className="flex min-h-screen w-full bg-background">
