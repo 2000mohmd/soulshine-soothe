@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 import { KalmLogo } from "@/components/KalmLogo";
 import { completeOnboarding, getMyProfile } from "@/lib/onboarding.functions";
 import { Button } from "@/components/ui/button";
