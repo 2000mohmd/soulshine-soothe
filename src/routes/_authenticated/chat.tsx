@@ -6,7 +6,7 @@ import { getMyProfile } from "@/lib/onboarding.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowUp, LifeBuoy, Loader2, Mic, PanelLeft, Square, Trash2 } from "lucide-react";
+import { ArrowUp, LifeBuoy, Loader2, Mic, PanelLeft, Phone, Square, Trash2 } from "lucide-react";
 import {
   createThread,
   deleteThread,
@@ -21,6 +21,7 @@ import { QUICK_ACTIONS } from "@/lib/quick-actions";
 import { DailyPromptCard } from "@/components/DailyPromptCard";
 import { InlineExerciseWidget } from "@/components/InlineExerciseWidget";
 import { AppSidebar } from "@/components/AppSidebar";
+import { VoiceCallOverlay } from "@/components/VoiceCallOverlay";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/lib/i18n";
 
@@ -325,9 +326,14 @@ function ChatPage() {
           <h1 className="min-w-0 flex-1 truncate font-display text-base">
             {activeThread?.title ?? t("nav.newConversation")}
           </h1>
-          <span className="hidden text-xs text-muted-foreground sm:inline">
-            {t("chat.supportNotTherapy")}
-          </span>
+          <button
+            type="button"
+            onClick={() => setCallOpen(true)}
+            className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <Phone className="size-3.5" aria-hidden />
+            <span className="hidden sm:inline">{t("call.start")}</span>
+          </button>
         </header>
 
         {/* Transcript: assistant text sits plain on the page, user text in a soft bubble. */}
