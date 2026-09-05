@@ -175,14 +175,32 @@ describe("handleEntitlements", () => {
     expect(body.chat.remainingToday).toBe(8);
   });
 
-  it("reports premium as unlimited-ish with the high cap", async () => {
+  it("reports pro as unlimited-ish with the 200/day cap and one weekly call", async () => {
+    h.state.tables["profiles"] = { maybeSingle: { subscription_tier: "pro" } };
+    const body = await (await handleEntitlements(req("/api/v1/entitlements"))).json();
+    expect(body.tier).toBe("pro");
+    expect(body.chat.unlimited).toBe(true);
+    expect(body.chat.dailyLimit).toBe(200);
+    expect(body.voice.weeklyLimit).toBe(1);
+  });
+
+  it("reports premium as unlimited-ish with the 500/day ceiling and two weekly calls", async () => {
     h.state.tables["profiles"] = { maybeSingle: { subscription_tier: "premium" } };
     const body = await (await handleEntitlements(req("/api/v1/entitlements"))).json();
     expect(body.tier).toBe("premium");
     expect(body.chat.unlimited).toBe(true);
-    expect(body.chat.dailyLimit).toBe(200);
+    expect(body.chat.dailyLimit).toBe(500);
     expect(body.chat.remainingToday).toBeNull();
+    expect(body.voice.weeklyLimit).toBe(2);
+    expect(body.voice.enabled).toBe(true);
   });
+
+  it("gives free tier no voice access", async () => {
+    const body = await (await handleEntitlements(req("/api/v1/entitlements"))).json();
+    expect(body.voice.enabled).toBe(false);
+    expect(body.voice.weeklyLimit).toBe(0);
+  });
+
 
   it("401s without a valid token", async () => {
     h.state.authOk = false;

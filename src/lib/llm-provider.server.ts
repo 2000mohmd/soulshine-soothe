@@ -49,7 +49,20 @@ function openRouterKey() {
 
 // --- OpenAI-compatible translation ----------------------------------------
 
+/**
+ * Anthropic's ephemeral prompt cache, reachable through OpenRouter by marking a
+ * content part with `cache_control`. The system prompt is large and identical on
+ * every turn of a conversation, so caching it means repeat calls pay the much
+ * cheaper cache-read rate instead of full input price. No behaviour change.
+ */
+type CacheableTextPart = {
+  type: "text";
+  text: string;
+  cache_control?: { type: "ephemeral" };
+};
+
 type GatewayMessage =
+  | { role: "system"; content: CacheableTextPart[] }
   | { role: "system" | "user" | "assistant"; content: string }
   | {
       role: "assistant";
@@ -63,7 +76,13 @@ type GatewayMessage =
   | { role: "tool"; tool_call_id: string; content: string };
 
 function toGatewayMessages(system: string, messages: LlmMessage[]): GatewayMessage[] {
-  const out: GatewayMessage[] = [{ role: "system", content: system }];
+  const out: GatewayMessage[] = [
+    {
+      role: "system",
+      // Static across the whole conversation -> cache it.
+      content: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
+    },
+  ];
 
   for (const message of messages) {
     if (typeof message.content === "string") {

@@ -1,9 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { createCheckoutSession, ensureStripeCustomer } from "@/lib/billing/stripe.server";
+import {
+  createCheckoutSession,
+  ensureStripeCustomer,
+  resolvePlanPriceId,
+} from "@/lib/billing/stripe.server";
 import { ApiError, handle, json, readJson, requireAuth } from "../-shared";
 
 const Body = z.object({
+  // Which paid plan and billing cadence to buy. Defaults keep older clients
+  // (which sent no plan at all) on the previous behaviour: premium monthly.
+  plan: z.enum(["pro", "premium"]).default("premium"),
+  interval: z.enum(["monthly", "yearly"]).default("monthly"),
   // Where Stripe sends the browser back after checkout. Optional — falls back
   // to the request's Origin header, then APP_BASE_URL, so this also works from
   // a plain `curl` test against the deployed app with no body at all.
@@ -23,15 +31,17 @@ function defaultBaseUrl(request: Request): string {
 }
 
 /**
- * POST /api/v1/billing/checkout — creates a Stripe Checkout Session for the
- * premium subscription and returns its hosted URL for the client to open.
+ * POST /api/v1/billing/checkout
+ * Body: { plan: "pro" | "premium", interval: "monthly" | "yearly", successUrl?, cancelUrl? }
  *
- * Requires two env vars to actually work (both throw a clear error if unset):
- *   STRIPE_SECRET_KEY       sk_test_... now, sk_live_... after verification —
- *                           swapping this is the ONLY step to go live.
- *   STRIPE_PREMIUM_PRICE_ID the Stripe Price id for the premium plan (test
- *                           mode and live mode have separate ids; a
- *                           live-key swap needs the matching live price id too).
+ * Prices are resolved by src/lib/billing/plans.ts — either from the pinned env
+ * vars (STRIPE_PRO_MONTHLY_PRICE_ID, STRIPE_PRO_YEARLY_PRICE_ID,
+ * STRIPE_PREMIUM_MONTHLY_PRICE_ID, STRIPE_PREMIUM_YEARLY_PRICE_ID) or from the
+ * Price lookup_key ("pro_monthly" etc.), which is identical in test and live.
+ *
+ * Switching plan or cadence on an EXISTING subscription happens in the Stripe
+ * Customer Portal (/api/v1/billing/portal) — configure the portal to offer
+ * these four prices with proration enabled.
  */
 export const Route = createFileRoute("/api/v1/billing/checkout")({
   server: {
@@ -39,14 +49,21 @@ export const Route = createFileRoute("/api/v1/billing/checkout")({
       POST: async ({ request }) =>
         handle(async () => {
           const { supabase, userId } = await requireAuth(request);
-          const body = await readJson(request, Body);
+          const body = await readJson(request, Body).catch((err) => {
+            if (err instanceof ApiError && err.status === 400) {
+              return Body.parse({});
+            }
+            throw err;
+          });
 
-          const priceId = process.env["STRIPE_PREMIUM_PRICE_ID"];
-          if (!priceId) {
-            throw new ApiError(
-              500,
-              "Billing isn't configured yet (STRIPE_PREMIUM_PRICE_ID unset).",
-            );
+          const plan = body.plan ?? "premium";
+          const interval = body.interval ?? "monthly";
+
+          let priceId: string;
+          try {
+            priceId = await resolvePlanPriceId(plan, interval);
+          } catch (err) {
+            throw new ApiError(500, err instanceof Error ? err.message : "Billing isn't configured");
           }
 
           const { data: authUser } = await supabase.auth.getUser();
@@ -66,7 +83,13 @@ export const Route = createFileRoute("/api/v1/billing/checkout")({
           });
 
           if (!session.url) throw new ApiError(500, "Stripe did not return a checkout URL.");
-          return json({ checkoutUrl: session.url, sessionId: session.id });
+          return json({
+            checkoutUrl: session.url,
+            sessionId: session.id,
+            plan,
+            interval,
+            priceId,
+          });
         }),
     },
   },

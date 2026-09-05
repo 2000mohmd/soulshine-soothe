@@ -15,7 +15,8 @@ import { buildSystemPrompt, type CompanionContext } from "./ai-companion.server"
 import { runCrisisGate } from "./crisis-gate.server";
 import type { CrisisResponse } from "./crisis";
 import { callCompanionModel } from "./llm-provider.server";
-import { isUnlimitedishTier } from "./chat-limits";
+import { CALL_WINDOW_DAYS, CALL_WINDOW_MS, weeklyCallAllowance } from "./chat-limits";
+import { estimateCallCostUsd } from "./rate-limit/pricing";
 import { fetchRecentSummaries } from "./thread-summary.server";
 
 type Client = SupabaseClient<Database>;
@@ -41,17 +42,77 @@ export type CallTurn = { role: "user" | "assistant"; text: string; at: string };
 
 export type CallSessionRow = Database["public"]["Tables"]["call_sessions"]["Row"];
 
-/** Premium/org only, unless the open beta flag is set. */
+/**
+ * Voice-call access + frequency. Free has no access at all; Pro gets one call
+ * per rolling 7 days and Premium/org get two. The window is counted straight off
+ * call_sessions (any call that actually started — failed provider handshakes
+ * don't count), modelled on the sliding window in rate-limit/postgres.ts.
+ */
 async function assertLiveSessionsAllowed(supabase: Client, userId: string): Promise<void> {
   if (process.env["LIVE_SESSIONS_OPEN_BETA"] === "true") return;
-  const { data } = await supabase
+
+  const { data: profile } = await supabase
     .from("profiles")
     .select("subscription_tier")
     .eq("id", userId)
     .maybeSingle();
-  if (!isUnlimitedishTier(data?.subscription_tier)) {
-    throw new CallSessionError("Live voice sessions are a premium feature.", 402);
+
+  const allowance = weeklyCallAllowance(profile?.subscription_tier);
+  if (allowance === 0) {
+    throw new CallSessionError(
+      "Live voice sessions are part of the Pro and Premium plans.",
+      402,
+    );
   }
+
+  const usage = await callWindowUsage(supabase, userId, allowance);
+  if (usage.remaining <= 0) {
+    const when = usage.nextAvailableAt
+      ? new Date(usage.nextAvailableAt).toLocaleDateString("en-US", {
+          weekday: "long",
+          month: "short",
+          day: "numeric",
+        })
+      : "soon";
+    throw new CallSessionError(
+      `You've used your ${allowance === 1 ? "voice call" : `${allowance} voice calls`} for this week. Your next call is available on ${when}. I'm still here in chat any time.`,
+      429,
+    );
+  }
+}
+
+/** How many calls this user has started in the rolling window, and when the next one frees up. */
+export async function callWindowUsage(
+  supabase: Client,
+  userId: string,
+  allowance: number,
+): Promise<{
+  allowance: number;
+  used: number;
+  remaining: number;
+  windowDays: number;
+  nextAvailableAt: string | null;
+}> {
+  const since = new Date(Date.now() - CALL_WINDOW_MS).toISOString();
+  const { data } = await supabase
+    .from("call_sessions")
+    .select("started_at")
+    .eq("user_id", userId)
+    .neq("status", "failed")
+    .gte("started_at", since)
+    .order("started_at", { ascending: true });
+
+  const started = data ?? [];
+  const used = started.length;
+  const remaining = Math.max(0, allowance - used);
+  // The oldest call inside the window is the one that ages out first.
+  const oldest = started[0]?.started_at ?? null;
+  const nextAvailableAt =
+    remaining > 0 || !oldest
+      ? null
+      : new Date(new Date(oldest).getTime() + CALL_WINDOW_MS).toISOString();
+
+  return { allowance, used, remaining, windowDays: CALL_WINDOW_DAYS, nextAvailableAt };
 }
 
 async function loadCallContext(
@@ -367,6 +428,9 @@ export async function endCallSessionCore(
       status: session.status === "failed" ? "failed" : "ended",
       ended_at: endedAt.toISOString(),
       duration_seconds: durationSeconds,
+      // Internal cost accounting — the same idea as chat's chat_usage rows, so
+      // per-customer cost vs. price is visible in the admin cost view.
+      estimated_cost_usd: estimateCallCostUsd(durationSeconds),
       summary,
       end_reason: input.end_reason ?? "client_hangup",
     })

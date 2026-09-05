@@ -24,7 +24,7 @@ implemented (billing), `500` otherwise (`{"error":"Internal error"}`, logged).
 
 | Method             | Path                              | Wraps                                     | Notes                                                                                          |
 | ------------------ | --------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| GET                | `/api/v1/entitlements`            | `getEntitlements`                         | tier, enforced daily cap (`dailyLimit`; free = 8/day, env-tunable), usedToday, feature flags     |
+| GET                | `/api/v1/entitlements`            | `getEntitlements`                         | tier, billing interval, enforced daily cap (`dailyLimit`; free 8 / pro 200 / premium 500), usedToday, weekly voice allowance + usage + `nextCallAvailableAt`, feature flags |
 | GET                | `/api/v1/preferences`             | `getMyPreferences`                        | companion persona, theme, language                                                             |
 | PATCH              | `/api/v1/preferences`             | `setMyPreferences`                        | `{ companionPersona?, theme? }`                                                                |
 | GET                | `/api/v1/personas`                | `listCompanionPersonas`                   | **public** — persona catalogue                                                                 |
@@ -41,6 +41,8 @@ implemented (billing), `500` otherwise (`{"error":"Internal error"}`, logged).
 | GET                | `/api/v1/chat/threads/$id/messages` | `getThreadMessagesPageCore`             | keyset-paginated `?limit=&before=`; returns `nextBefore`                                        |
 | GET                | `/api/v1/chat/history?thread_id=` | `getThreadHistory`                        | superseded by `chat/threads/$id/messages`                                                       |
 | POST               | `/api/v1/chat/messages`           | `sendMessage`                             | body `{ thread_id?, content, quick_action? }`; runs the full crisis gate + rate limiter        |
+| POST               | `/api/v1/billing/checkout`        | Stripe Checkout                           | body `{ plan: "pro" \| "premium", interval: "monthly" \| "yearly" }` → hosted checkout URL      |
+| GET                | `/api/v1/admin/users/$userId/cost`| `getCustomerCostReport`                   | **admin only, internal** — tier, interval, chat/voice/combined estimated cost for the period    |
 | POST               | `/api/v1/billing/verify-receipt`  | `getReceiptValidator().validate`          | **stub — returns 501** until store integration lands (`src/lib/billing/receipt-validation.ts`) |
 
 ## Not done in this pass
