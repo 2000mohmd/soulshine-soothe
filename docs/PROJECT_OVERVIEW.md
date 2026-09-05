@@ -119,9 +119,14 @@ them on `profiles`. Per-call cost is written to
 `call_sessions.estimated_cost_usd`, and `GET /api/v1/admin/users/:userId/cost`
 (admin-only) reports tier, interval, chat cost, voice cost and combined cost.
 
-Still missing on billing: the member-facing pricing/upgrade UI for Pro, and the
-Stripe Customer Portal must be configured in the Stripe dashboard to allow
-switching across the four prices with proration.
+Members compare and buy plans at `/plans` (`src/routes/_authenticated/plans.tsx`,
+linked from the app rail as "Plans"): three cards, a monthly/yearly toggle, the
+current-plan badge, today's message and weekly call usage, and a "Manage billing"
+button that opens the Stripe Customer Portal. Web actions go through
+`src/lib/billing.functions.ts`; the `/api/v1/billing/*` routes stay for mobile.
+
+Still missing on billing: the Stripe Customer Portal must be configured in the
+Stripe dashboard to allow switching across the four prices with proration.
 
 Not built yet:
 

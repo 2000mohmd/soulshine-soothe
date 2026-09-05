@@ -7,7 +7,6 @@
 - [x] Checkout accepts { plan, interval }; webhook derives tier + interval
 - [x] Prompt caching on the companion system prompt
 - [x] Per-call cost recording + admin per-customer cost endpoint
+- [x] Member-facing /plans pricing + upgrade page (verified against Stripe test checkout)
 - [ ] Stripe Customer Portal: allow switching across the four prices with proration (dashboard config, user action)
 
-## Not started
-- Member-facing pricing/upgrade UI for the new Pro tier
