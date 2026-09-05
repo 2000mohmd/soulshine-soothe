@@ -25,6 +25,8 @@ export type CompanionContext = {
   preferredName: string | null;
   accountType: string | null;
   introText: string | null;
+  /** Short internal orientation note written at onboarding (care-plan.server.ts). */
+  carePlan?: string | null;
   goals: string[];
   stressors: string[];
   communicationPreference: string | null;
@@ -88,6 +90,15 @@ export function buildSystemPrompt(ctx: CompanionContext): string {
     );
   }
   if (ctx.introText) lines.push(`How they introduced themselves: ${ctx.introText}`);
+  if (ctx.carePlan)
+    lines.push(
+      "",
+      "--- YOUR STARTING PLAN FOR THIS PERSON (internal, written when they joined) ---",
+      ctx.carePlan,
+      "Use this to know who they are, what pace and tone suit them, and what is worth gently offering. Never read it out, quote it, or refer to having a plan or notes about them.",
+      "--- END STARTING PLAN ---",
+      "",
+    );
   if (ctx.goals.length) lines.push(`Their stated goals: ${ctx.goals.join(", ")}`);
   if (ctx.stressors.length) lines.push(`Current stressors: ${ctx.stressors.join(", ")}`);
   if (ctx.communicationPreference)

@@ -1058,6 +1058,9 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          care_plan: string | null
+          care_plan_focus: string[]
+          care_plan_updated_at: string | null
           communication_preference: string | null
           created_at: string
           existing_diagnosis: string | null
@@ -1070,6 +1073,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          care_plan?: string | null
+          care_plan_focus?: string[]
+          care_plan_updated_at?: string | null
           communication_preference?: string | null
           created_at?: string
           existing_diagnosis?: string | null
@@ -1082,6 +1088,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          care_plan?: string | null
+          care_plan_focus?: string[]
+          care_plan_updated_at?: string | null
           communication_preference?: string | null
           created_at?: string
           existing_diagnosis?: string | null

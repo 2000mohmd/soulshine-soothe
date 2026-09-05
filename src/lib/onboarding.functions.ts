@@ -74,9 +74,13 @@ export async function completeOnboardingCore(
     // Under 18 is locked to teen mode regardless of what the client selected.
     const resolvedAccountType = age < MINOR_AGE ? "teen" : data.account_type;
 
+    // Upsert, not update: a freshly signed-up account may not have a profiles
+    // row yet, and an UPDATE matching zero rows silently left
+    // onboarding_completed false — which bounced the person back to step 1.
     const { error: profileError } = await supabase
       .from("profiles")
-      .update({
+      .upsert({
+        id: userId,
         preferred_name: data.preferred_name,
         account_type: resolvedAccountType,
         privacy_consent: data.privacy_consent,
@@ -87,8 +91,7 @@ export async function completeOnboardingCore(
         age_confirmed_13_plus: age >= MIN_AGE,
         consent_accepted_at: new Date().toISOString(),
         onboarding_completed: true,
-      } as never)
-      .eq("id", userId);
+      } as never, { onConflict: "id" });
     if (profileError) throw profileError;
 
     const { error: introError } = await supabase.from("user_profiles").upsert(
@@ -113,6 +116,31 @@ export async function completeOnboardingCore(
       is_baseline: true,
     });
     if (moodError) throw moodError;
+
+    // The AI writes a short orientation plan from what they just told us, so
+    // chat, nudges, calls and reactions all start out knowing who they are.
+    let carePlan: string | null = null;
+    try {
+      const { generateAndStoreCarePlan } = await import("./care-plan.server");
+      const language = (
+        await supabase.from("profiles").select("language").eq("id", userId).maybeSingle()
+      ).data?.language;
+      const generated = await generateAndStoreCarePlan(supabase, userId, {
+        preferredName: data.preferred_name,
+        accountType: resolvedAccountType,
+        introText: data.intro_text || null,
+        goals: data.goals,
+        stressors: data.stressors,
+        communicationPreference: data.communication_preference || null,
+        topicsToAvoid: data.topics_to_avoid || null,
+        inProfessionalCare: data.in_professional_care,
+        baselineMood: data.baseline_mood,
+        language: language ?? "en",
+      });
+      carePlan = generated?.plan ?? null;
+    } catch (error) {
+      console.error("care plan step failed", error);
+    }
 
     // The companion opens the conversation rather than dropping the person into
     // an empty chat: one warm, personal message waiting for them on /chat.
@@ -144,6 +172,7 @@ export async function completeOnboardingCore(
             communicationPreference: data.communication_preference || null,
             topicsToAvoid: data.topics_to_avoid || null,
             inProfessionalCare: data.in_professional_care,
+            carePlan,
           },
         );
         if (opening) {
