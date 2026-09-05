@@ -8,5 +8,8 @@
 - [x] Prompt caching on the companion system prompt
 - [x] Per-call cost recording + admin per-customer cost endpoint
 - [x] Member-facing /plans pricing + upgrade page (verified against Stripe test checkout)
+- [x] "Creating your plan" screen at the end of onboarding (shows the plan + focus areas)
+- [x] Voice notes moved to OpenAI transcription (one provider for all voice)
+- [x] Live voice call button in chat + WebRTC call screen on the existing session API
 - [ ] Stripe Customer Portal: allow switching across the four prices with proration (dashboard config, user action)
 
