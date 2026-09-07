@@ -14,7 +14,6 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CrisisRouteImport } from './routes/crisis'
 import { Route as LegalRouteImport } from './routes/legal'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedCareRouteImport } from './routes/_authenticated/care'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
@@ -86,11 +85,6 @@ const CrisisRoute = CrisisRouteImport.update({
 const LegalRoute = LegalRouteImport.update({
   id: '/legal',
   path: '/legal',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
@@ -350,7 +344,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/crisis': typeof CrisisRoute
   '/legal': typeof LegalRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/care': typeof AuthenticatedCareRoute
   '/chat': typeof AuthenticatedChatRoute
@@ -405,7 +398,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/crisis': typeof CrisisRoute
   '/legal': typeof LegalRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/care': typeof AuthenticatedCareRoute
   '/chat': typeof AuthenticatedChatRoute
   '/check-ins': typeof AuthenticatedCheckInsRoute
@@ -461,7 +453,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/crisis': typeof CrisisRoute
   '/legal': typeof LegalRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/care': typeof AuthenticatedCareRoute
   '/_authenticated/chat': typeof AuthenticatedChatRoute
@@ -518,7 +509,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/crisis'
     | '/legal'
-    | '/reset-password'
     | '/admin'
     | '/care'
     | '/chat'
@@ -573,7 +563,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/crisis'
     | '/legal'
-    | '/reset-password'
     | '/care'
     | '/chat'
     | '/check-ins'
@@ -628,7 +617,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/crisis'
     | '/legal'
-    | '/reset-password'
     | '/_authenticated/admin'
     | '/_authenticated/care'
     | '/_authenticated/chat'
@@ -685,7 +673,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CrisisRoute: typeof CrisisRoute
   LegalRoute: typeof LegalRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicUnsubscribeRoute: typeof ApiPublicUnsubscribeRoute
   ApiV1AccountRoute: typeof ApiV1AccountRoute
   ApiV1CrisisResourcesRoute: typeof ApiV1CrisisResourcesRoute
@@ -747,13 +734,6 @@ declare module '@tanstack/react-router' {
       path: '/legal'
       fullPath: '/legal'
       preLoaderRoute: typeof LegalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
@@ -1207,7 +1187,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CrisisRoute: CrisisRoute,
   LegalRoute: LegalRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicUnsubscribeRoute: ApiPublicUnsubscribeRoute,
   ApiV1AccountRoute: ApiV1AccountRoute,
   ApiV1CrisisResourcesRoute: ApiV1CrisisResourcesRoute,

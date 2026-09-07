@@ -8,7 +8,6 @@ import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SafetyFooter } from "@/components/SafetyFooter";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslation } from "@/lib/i18n";
@@ -20,85 +19,59 @@ export const Route = createFileRoute("/auth")({
       { title: "Sign in to Kalm" },
       {
         name: "description",
-        content: "Sign in or create your Kalm account to start your private wellness check-ins.",
+        content: "Get a secure sign-in link by email and start your private Kalm wellness check-ins.",
       },
       { property: "og:title", content: "Sign in to Kalm" },
       {
         property: "og:description",
-        content: "Sign in or create your Kalm account to start your private wellness check-ins.",
+        content: "Get a secure sign-in link by email and start your private Kalm wellness check-ins.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: AuthPage,
 });
 
-const credentials = z.object({
-  email: z.string().trim().email("Enter a valid email address").max(255),
-  password: z.string().min(8, "Use at least 8 characters").max(72),
-});
+const emailSchema = z.string().trim().email("Enter a valid email address").max(255);
 
 function AuthPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
-
-  async function handleForgotPassword() {
-    const parsedEmail = z.string().trim().email().safeParse(email);
-    if (!parsedEmail.success) {
-      toast.error("Enter your email address first");
-      return;
-    }
-    setBusy(true);
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(parsedEmail.data, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      if (error) throw error;
-      setResetSent(true);
-      toast.success("Password reset link sent");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Couldn't send the reset link");
-    } finally {
-      setBusy(false);
-    }
-  }
+  const [linkSent, setLinkSent] = useState(false);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/chat", replace: true });
     });
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) navigate({ to: "/chat", replace: true });
+    });
+    return () => data.subscription.unsubscribe();
   }, [navigate]);
 
-  async function handlePassword(mode: "signin" | "signup") {
-    const parsed = credentials.safeParse({ email, password });
+  async function handleMagicLink() {
+    const parsed = emailSchema.safeParse(email);
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? t("auth.checkDetails"));
       return;
     }
     setBusy(true);
     try {
-      if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
-          email: parsed.data.email,
-          password: parsed.data.password,
-          options: { emailRedirectTo: window.location.origin },
-        });
-        if (error) throw error;
-        if (!data.session) {
-          setEmailSent(true);
-          return;
-        }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword(parsed.data);
-        if (error) throw error;
-      }
-      navigate({ to: "/chat", replace: true });
+      const { error } = await supabase.auth.signInWithOtp({
+        email: parsed.data,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
+          shouldCreateUser: true,
+        },
+      });
+      if (error) throw error;
+      setLinkSent(true);
+      toast.success(t("auth.linkSent"));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("auth.genericError"));
+      toast.error(error instanceof Error ? error.message : t("auth.linkFailed"));
     } finally {
       setBusy(false);
     }
@@ -134,70 +107,54 @@ function AuthPage() {
           </Link>
 
           <div className="surface-soft p-7">
-            {emailSent ? (
-              <div className="space-y-3 text-center">
-                <h1 className="text-2xl">{t("auth.checkEmail")}</h1>
-                <p className="text-muted-foreground">{t("auth.confirmationSent", { email })}</p>
+            {linkSent ? (
+              <div className="space-y-4 text-center">
+                <h1 className="text-2xl">{t("auth.linkSent")}</h1>
+                <p className="text-muted-foreground">{t("auth.linkSentBody", { email })}</p>
+                <Button
+                  variant="outline"
+                  className="w-full rounded-full"
+                  disabled={busy}
+                  onClick={() => void handleMagicLink()}
+                >
+                  {t("auth.sendAgain")}
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setLinkSent(false)}
+                  className="w-full text-center text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                >
+                  {t("auth.useDifferentEmail")}
+                </button>
               </div>
             ) : (
-              <Tabs defaultValue="signup">
-                <TabsList className="w-full rounded-full">
-                  <TabsTrigger value="signup" className="flex-1 rounded-full">
-                    {t("auth.createAccount")}
-                  </TabsTrigger>
-                  <TabsTrigger value="signin" className="flex-1 rounded-full">
-                    {t("auth.signIn")}
-                  </TabsTrigger>
-                </TabsList>
+              <div className="space-y-5">
+                <div className="space-y-2 text-center">
+                  <h1 className="text-2xl">{t("auth.magicTitle")}</h1>
+                  <p className="text-sm text-muted-foreground">{t("auth.magicSubtitle")}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="magic-email">{t("auth.emailLabel")}</Label>
+                  <Input
+                    id="magic-email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") void handleMagicLink();
+                    }}
+                    placeholder="you@example.com"
+                  />
+                </div>
+                <Button
+                  className="w-full rounded-full"
+                  disabled={busy}
+                  onClick={() => void handleMagicLink()}
+                >
+                  {t("auth.sendLink")}
+                </Button>
 
-                {(["signup", "signin"] as const).map((mode) => (
-                  <TabsContent key={mode} value={mode} className="mt-6 space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={`${mode}-email`}>{t("auth.emailLabel")}</Label>
-                      <Input
-                        id={`${mode}-email`}
-                        type="email"
-                        autoComplete="email"
-                        value={email}
-                        onChange={(event) => setEmail(event.target.value)}
-                        placeholder="you@example.com"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`${mode}-password`}>{t("auth.passwordLabel")}</Label>
-                      <Input
-                        id={`${mode}-password`}
-                        type="password"
-                        autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                        placeholder={t("auth.passwordPlaceholder")}
-                      />
-                    </div>
-                    <Button
-                      className="w-full rounded-full"
-                      disabled={busy}
-                      onClick={() => void handlePassword(mode)}
-                    >
-                      {mode === "signup" ? t("auth.createAccount") : t("auth.signIn")}
-                    </Button>
-                    {mode === "signin" && (
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void handleForgotPassword()}
-                        className="w-full text-center text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-                      >
-                        {resetSent ? "Reset link sent — send again" : "Forgot your password?"}
-                      </button>
-                    )}
-                  </TabsContent>
-                ))}
-              </Tabs>
-            )}
-
-            {!emailSent && (
-              <>
                 <div className="my-6 flex items-center gap-3 text-sm text-muted-foreground">
                   <span className="h-px flex-1 bg-border" />
                   {t("auth.or")}
@@ -221,7 +178,7 @@ function AuthPage() {
                     {t("auth.continueWithApple")}
                   </Button>
                 </div>
-              </>
+              </div>
             )}
           </div>
 
