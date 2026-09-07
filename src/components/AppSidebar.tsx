@@ -52,10 +52,13 @@ export function AppSidebar({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const signedIn = useSignedIn();
   const fetchProfile = useServerFn(getMyProfile);
   const { data: profileData, isLoading: profileLoading } = useQuery({
     queryKey: ["my-profile"],
     queryFn: () => fetchProfile(),
+    enabled: signedIn,
+    retry: false,
   });
   const preferredName = profileData?.profile?.preferred_name;
 
