@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getMyProfile } from "@/lib/onboarding.functions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/lib/i18n";
+import { useSignedIn } from "@/hooks/use-signed-in";
 
 export const SIDEBAR_NAV = [
   { to: "/chat", labelKey: "nav.companion", icon: MessageCircle },
