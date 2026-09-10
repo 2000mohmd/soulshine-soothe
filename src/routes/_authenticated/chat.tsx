@@ -6,7 +6,18 @@ import { getMyProfile } from "@/lib/onboarding.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowUp, LifeBuoy, Loader2, Mic, PanelLeft, Phone, Square, Trash2 } from "lucide-react";
+import {
+  ArrowUp,
+  LifeBuoy,
+  Loader2,
+  Mic,
+  PanelLeft,
+  Phone,
+  ShieldCheck,
+  Square,
+  Trash2,
+  UserRound,
+} from "lucide-react";
 import {
   createThread,
   deleteThread,
