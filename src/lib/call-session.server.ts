@@ -196,6 +196,17 @@ export async function startCallSessionCore(
   const apiKey = process.env["OPENAI_API_KEY"];
   if (!apiKey) throw new CallSessionError("Live voice sessions aren't configured yet.", 503);
 
+  // A teen waiting on a guardian's permission cannot start a call. Crisis
+  // resources stay available to them in chat — only the companion is held.
+  const { companionAllowed } = await import("./guardian-consent.server");
+  const consent = await companionAllowed(supabase, userId).catch(() => ({ allowed: true }));
+  if (!consent.allowed) {
+    throw new CallSessionError(
+      "A parent or guardian needs to give permission before voice calls can start.",
+      403,
+    );
+  }
+
   // One active call at a time.
   const { data: active } = await supabase
     .from("call_sessions")
