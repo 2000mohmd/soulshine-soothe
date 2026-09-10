@@ -465,6 +465,18 @@ async function prepareChatTurn(
 
   const consented = profile.data?.ai_context_consent !== false;
 
+  // The safety plan is the person's own writing. The companion is told it
+  // EXISTS regardless (so it can point them to it), but only sees its contents
+  // when they consented to AI context.
+  const safetyPlanRow = await supabase
+    .from("safety_plans")
+    .select("warning_signs, coping_steps")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const planWarningSigns = safetyPlanRow.data?.warning_signs ?? [];
+  const planCopingSteps = safetyPlanRow.data?.coping_steps ?? [];
+  const hasPlan = Boolean(safetyPlanRow.data);
+
   const context: CompanionContext = {
     preferredName: profile.data?.preferred_name ?? null,
     accountType: profile.data?.account_type ?? null,
