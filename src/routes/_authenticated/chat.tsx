@@ -33,6 +33,9 @@ import { DailyPromptCard } from "@/components/DailyPromptCard";
 import { InlineExerciseWidget } from "@/components/InlineExerciseWidget";
 import { AppSidebar } from "@/components/AppSidebar";
 import { VoiceCallOverlay } from "@/components/VoiceCallOverlay";
+import { SafetyPlanPanel } from "@/components/SafetyPlanPanel";
+import { HumanSupportPanel } from "@/components/HumanSupportPanel";
+import { GuardianConsentNotice } from "@/components/GuardianConsentNotice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/lib/i18n";
 
