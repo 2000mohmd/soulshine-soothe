@@ -29,6 +29,7 @@ import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin/audit'
 import { Route as AuthenticatedAdminCrisisRouteImport } from './routes/_authenticated/admin/crisis'
+import { Route as AuthenticatedAdminHumanRouteImport } from './routes/_authenticated/admin/human'
 import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin/support'
 import { Route as AuthenticatedAdminTeamRouteImport } from './routes/_authenticated/admin/team'
 import { Route as ApiPublicGuardianConsentRouteImport } from './routes/api/public/guardian-consent'
@@ -164,6 +165,11 @@ const AuthenticatedAdminCrisisRoute =
     path: '/crisis',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminHumanRoute = AuthenticatedAdminHumanRouteImport.update({
+  id: '/human',
+  path: '/human',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
 const AuthenticatedAdminSupportRoute =
   AuthenticatedAdminSupportRouteImport.update({
     id: '/support',
@@ -365,6 +371,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof AuthenticatedSupportRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/crisis': typeof AuthenticatedAdminCrisisRoute
+  '/admin/human': typeof AuthenticatedAdminHumanRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
   '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/api/public/guardian-consent': typeof ApiPublicGuardianConsentRoute
@@ -419,6 +426,7 @@ export interface FileRoutesByTo {
   '/support': typeof AuthenticatedSupportRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/crisis': typeof AuthenticatedAdminCrisisRoute
+  '/admin/human': typeof AuthenticatedAdminHumanRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
   '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/api/public/guardian-consent': typeof ApiPublicGuardianConsentRoute
@@ -476,6 +484,7 @@ export interface FileRoutesById {
   '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/crisis': typeof AuthenticatedAdminCrisisRoute
+  '/_authenticated/admin/human': typeof AuthenticatedAdminHumanRoute
   '/_authenticated/admin/support': typeof AuthenticatedAdminSupportRoute
   '/_authenticated/admin/team': typeof AuthenticatedAdminTeamRoute
   '/api/public/guardian-consent': typeof ApiPublicGuardianConsentRoute
@@ -533,6 +542,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/admin/audit'
     | '/admin/crisis'
+    | '/admin/human'
     | '/admin/support'
     | '/admin/team'
     | '/api/public/guardian-consent'
@@ -587,6 +597,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/admin/audit'
     | '/admin/crisis'
+    | '/admin/human'
     | '/admin/support'
     | '/admin/team'
     | '/api/public/guardian-consent'
@@ -643,6 +654,7 @@ export interface FileRouteTypes {
     | '/_authenticated/support'
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/crisis'
+    | '/_authenticated/admin/human'
     | '/_authenticated/admin/support'
     | '/_authenticated/admin/team'
     | '/api/public/guardian-consent'
@@ -853,6 +865,13 @@ declare module '@tanstack/react-router' {
       path: '/crisis'
       fullPath: '/admin/crisis'
       preLoaderRoute: typeof AuthenticatedAdminCrisisRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/human': {
+      id: '/_authenticated/admin/human'
+      path: '/human'
+      fullPath: '/admin/human'
+      preLoaderRoute: typeof AuthenticatedAdminHumanRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/support': {
@@ -1099,6 +1118,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminCrisisRoute: typeof AuthenticatedAdminCrisisRoute
+  AuthenticatedAdminHumanRoute: typeof AuthenticatedAdminHumanRoute
   AuthenticatedAdminSupportRoute: typeof AuthenticatedAdminSupportRoute
   AuthenticatedAdminTeamRoute: typeof AuthenticatedAdminTeamRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -1110,6 +1130,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
   {
     AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
     AuthenticatedAdminCrisisRoute: AuthenticatedAdminCrisisRoute,
+    AuthenticatedAdminHumanRoute: AuthenticatedAdminHumanRoute,
     AuthenticatedAdminSupportRoute: AuthenticatedAdminSupportRoute,
     AuthenticatedAdminTeamRoute: AuthenticatedAdminTeamRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
