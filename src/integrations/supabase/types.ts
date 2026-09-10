@@ -603,6 +603,51 @@ export type Database = {
         }
         Relationships: []
       }
+      guardian_consents: {
+        Row: {
+          consent_ip: string | null
+          consent_user_agent: string | null
+          created_at: string
+          granted_at: string | null
+          guardian_email: string
+          guardian_name: string | null
+          requested_at: string
+          status: string
+          token_hash: string
+          updated_at: string
+          user_id: string
+          withdrawn_at: string | null
+        }
+        Insert: {
+          consent_ip?: string | null
+          consent_user_agent?: string | null
+          created_at?: string
+          granted_at?: string | null
+          guardian_email: string
+          guardian_name?: string | null
+          requested_at?: string
+          status?: string
+          token_hash: string
+          updated_at?: string
+          user_id: string
+          withdrawn_at?: string | null
+        }
+        Update: {
+          consent_ip?: string | null
+          consent_user_agent?: string | null
+          created_at?: string
+          granted_at?: string | null
+          guardian_email?: string
+          guardian_name?: string | null
+          requested_at?: string
+          status?: string
+          token_hash?: string
+          updated_at?: string
+          user_id?: string
+          withdrawn_at?: string | null
+        }
+        Relationships: []
+      }
       habit_logs: {
         Row: {
           completed: boolean
@@ -676,6 +721,109 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      human_support_messages: {
+        Row: {
+          author_id: string | null
+          content: string
+          created_at: string
+          id: string
+          request_id: string
+          sender: string
+        }
+        Insert: {
+          author_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          request_id: string
+          sender: string
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          request_id?: string
+          sender?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "human_support_messages_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "human_support_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      human_support_requests: {
+        Row: {
+          alert_sent_at: string | null
+          claimed_at: string | null
+          claimed_by: string | null
+          closed_at: string | null
+          created_at: string
+          escalation_count: number
+          escalation_sent_at: string | null
+          id: string
+          language: string
+          preferred_name: string | null
+          severity: string | null
+          status: string
+          summary: string | null
+          thread_id: string | null
+          timezone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_sent_at?: string | null
+          claimed_at?: string | null
+          claimed_by?: string | null
+          closed_at?: string | null
+          created_at?: string
+          escalation_count?: number
+          escalation_sent_at?: string | null
+          id?: string
+          language?: string
+          preferred_name?: string | null
+          severity?: string | null
+          status?: string
+          summary?: string | null
+          thread_id?: string | null
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_sent_at?: string | null
+          claimed_at?: string | null
+          claimed_by?: string | null
+          closed_at?: string | null
+          created_at?: string
+          escalation_count?: number
+          escalation_sent_at?: string | null
+          id?: string
+          language?: string
+          preferred_name?: string | null
+          severity?: string | null
+          status?: string
+          summary?: string | null
+          thread_id?: string | null
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "human_support_requests_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_queue: {
         Row: {
@@ -829,6 +977,7 @@ export type Database = {
           consent_accepted_at: string | null
           created_at: string
           date_of_birth: string | null
+          guardian_consent_required: boolean
           id: string
           language: string
           onboarding_completed: boolean
@@ -852,6 +1001,7 @@ export type Database = {
           consent_accepted_at?: string | null
           created_at?: string
           date_of_birth?: string | null
+          guardian_consent_required?: boolean
           id: string
           language?: string
           onboarding_completed?: boolean
@@ -875,6 +1025,7 @@ export type Database = {
           consent_accepted_at?: string | null
           created_at?: string
           date_of_birth?: string | null
+          guardian_consent_required?: boolean
           id?: string
           language?: string
           onboarding_completed?: boolean
@@ -890,6 +1041,45 @@ export type Database = {
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           timezone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      safety_plans: {
+        Row: {
+          coping_steps: string[]
+          created_at: string
+          notes: string | null
+          people: string[]
+          professionals: string[]
+          reasons_to_stay: string[]
+          safer_space: string[]
+          updated_at: string
+          user_id: string
+          warning_signs: string[]
+        }
+        Insert: {
+          coping_steps?: string[]
+          created_at?: string
+          notes?: string | null
+          people?: string[]
+          professionals?: string[]
+          reasons_to_stay?: string[]
+          safer_space?: string[]
+          updated_at?: string
+          user_id: string
+          warning_signs?: string[]
+        }
+        Update: {
+          coping_steps?: string[]
+          created_at?: string
+          notes?: string | null
+          people?: string[]
+          professionals?: string[]
+          reasons_to_stay?: string[]
+          safer_space?: string[]
+          updated_at?: string
+          user_id?: string
+          warning_signs?: string[]
         }
         Relationships: []
       }
