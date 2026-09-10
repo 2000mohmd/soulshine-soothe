@@ -14,6 +14,7 @@ const ADMIN_NAV = [
   { to: "/admin", label: "Overview", exact: true, superOnly: false },
   { to: "/admin/users", label: "Users", exact: false, superOnly: false },
   { to: "/admin/crisis", label: "Crisis", exact: false, superOnly: false },
+  { to: "/admin/human", label: "Human support", exact: false, superOnly: false },
   { to: "/admin/support", label: "Support", exact: false, superOnly: false },
   { to: "/admin/team", label: "Team", exact: false, superOnly: true },
   { to: "/admin/audit", label: "Audit log", exact: false, superOnly: false },
