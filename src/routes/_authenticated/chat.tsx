@@ -59,7 +59,13 @@ export const Route = createFileRoute("/_authenticated/chat")({
   component: ChatPage,
 });
 
-function CrisisCard() {
+function CrisisCard({
+  onOpenPlan,
+  onAskHuman,
+}: {
+  onOpenPlan?: () => void;
+  onAskHuman?: () => void;
+}) {
   const { t, language } = useTranslation();
   const copy = crisisCopy(language);
   return (
@@ -75,6 +81,30 @@ function CrisisCard() {
           </li>
         ))}
       </ul>
+      {(onOpenPlan || onAskHuman) && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {onOpenPlan && (
+            <button
+              type="button"
+              onClick={onOpenPlan}
+              className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted"
+            >
+              <ShieldCheck className="size-3.5" aria-hidden />
+              {t("safetyPlan.open")}
+            </button>
+          )}
+          {onAskHuman && (
+            <button
+              type="button"
+              onClick={onAskHuman}
+              className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs text-primary-foreground"
+            >
+              <UserRound className="size-3.5" aria-hidden />
+              {t("humanSupport.button")}
+            </button>
+          )}
+        </div>
+      )}
       <p className="mt-3 text-xs text-muted-foreground">{copy.disclaimer}</p>
     </div>
   );
