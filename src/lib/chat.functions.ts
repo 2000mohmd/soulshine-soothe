@@ -12,6 +12,10 @@ import type { Database } from "@/integrations/supabase/types";
 
 const HISTORY_LIMIT = 20;
 
+/** Shown to a teen whose guardian hasn't approved the account yet. */
+const GUARDIAN_HOLD_MESSAGE =
+  "Thanks for writing. Before we can talk properly, a parent or guardian needs to give permission — we've sent them an email, and you can resend it from the note at the top of this screen. If you ever feel unsafe, the help lines are always available to you here, permission or not.";
+
 const SendInput = z.object({
   thread_id: z.string().uuid().optional(),
   content: z.string().trim().min(1).max(4000),
