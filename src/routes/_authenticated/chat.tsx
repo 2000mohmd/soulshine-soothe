@@ -212,6 +212,8 @@ function ChatPage() {
   const [pending, setPending] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [callOpen, setCallOpen] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
+  const [humanOpen, setHumanOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
