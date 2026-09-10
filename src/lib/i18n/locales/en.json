@@ -141,6 +141,8 @@
       "aiOptIn": "Optional: let Kalm use my check-ins and self-introduction to personalize conversations. You can turn this off at any time.",
       "dobLabel": "Your date of birth",
       "dobHint": "We use this to set age-appropriate content and safety. It is not shared.",
+      "guardianTitle": "A parent or guardian's email",
+      "guardianHint": "Because you're under 18, we'll email them to ask permission before the companion can talk with you. Help lines stay available to you either way.",
       "under13": "Kalm is for people aged {{min}} and over."
     },
     "mode": {
