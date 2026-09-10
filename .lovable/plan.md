@@ -1,6 +1,8 @@
 # Safety upgrade: plans, human handoff, AI reminders, teen consent
 
-Four additions, all inside the existing safety system rather than beside it.
+Four additions, all inside the existing safety system rather than beside it. No new
+member pages — everything lives inside the chat screen (panels, cards, buttons) plus
+the existing admin area.
 
 ## 1. Personal safety plan
 
@@ -14,10 +16,10 @@ Sections (all optional, free text + list items):
 - Making my space safer
 - My reason to stay
 
-Where it appears:
-- New page under the member area, reachable from the sidebar and from the Immediate support card.
-- Built and used inside chat too: the companion can offer to start or add to the plan mid-conversation, and the plan opens as a panel over the chat so they never have to leave the conversation to read or edit it.
-- When crisis language is detected in chat, the support card gains an "Open my safety plan" button. If they have no plan yet, the same button offers to start one, gently and optionally.
+Where it lives — entirely in chat:
+- A "My safety plan" button in the chat header opens the plan as a slide-over panel over the conversation, where they read and edit every section inline. No separate page, no route change.
+- The companion can offer to start or add to the plan mid-conversation, and a card in the transcript opens the same panel at the right section.
+- When crisis language is detected, the support card in the transcript gains an "Open my safety plan" button. With no plan yet, the same button gently offers to start one.
 - The companion is told a plan exists (and its warning signs / coping steps, only if they consented to AI context) so it can reference their own words back to them.
 - Included in data export and wiped by account deletion.
 
@@ -41,7 +43,7 @@ Where it appears:
 - When the server computes an age under 18 during onboarding, the account enters `awaiting_guardian_consent` instead of going straight to chat.
 - The teen enters a parent/guardian email. We send that guardian a consent request explaining plainly what Kalm is, what it is not, what data is kept, and how to withdraw consent.
 - The guardian approves through a signed one-time link (no account needed). We store who consented, when, from what email, and the IP, as the audit record.
-- Until consent lands, the teen sees a waiting screen with full crisis resources available — safety is never gated — but no companion chat or voice calls.
+- Until consent lands, the chat screen itself shows a waiting state in place of the composer, with full crisis resources available — safety is never gated — and companion replies and voice calls held back. No extra page.
 - Guardians can withdraw consent later through the same link, which returns the account to the waiting state.
 - Consent state is visible in the admin user detail view.
 
