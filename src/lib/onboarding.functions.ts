@@ -15,6 +15,9 @@ const OnboardingInput = z.object({
   // Real DOB (YYYY-MM-DD). The server computes age from this — it is the
   // authority for age_confirmed_13_plus and the teen lock.
   date_of_birth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD"),
+  // Only used when the computed age is under 18: where the consent request goes.
+  guardian_email: z.string().trim().email().max(200).nullish(),
+  guardian_name: z.string().trim().max(80).nullish(),
   intro_text: z.string().trim().max(2000).optional().default(""),
   goals: z.array(z.string().trim().max(80)).max(12).default([]),
   stressors: z.array(z.string().trim().max(80)).max(12).default([]),
