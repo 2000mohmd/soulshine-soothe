@@ -16,6 +16,7 @@ Sections (all optional, free text + list items):
 
 Where it appears:
 - New page under the member area, reachable from the sidebar and from the Immediate support card.
+- Built and used inside chat too: the companion can offer to start or add to the plan mid-conversation, and the plan opens as a panel over the chat so they never have to leave the conversation to read or edit it.
 - When crisis language is detected in chat, the support card gains an "Open my safety plan" button. If they have no plan yet, the same button offers to start one, gently and optionally.
 - The companion is told a plan exists (and its warning signs / coping steps, only if they consented to AI context) so it can reference their own words back to them.
 - Included in data export and wiped by account deletion.
