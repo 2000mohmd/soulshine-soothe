@@ -12,6 +12,10 @@ import type { Database } from "@/integrations/supabase/types";
 
 const HISTORY_LIMIT = 20;
 
+/** Shown to a teen whose guardian hasn't approved the account yet. */
+const GUARDIAN_HOLD_MESSAGE =
+  "Thanks for writing. Before we can talk properly, a parent or guardian needs to give permission — we've sent them an email, and you can resend it from the note at the top of this screen. If you ever feel unsafe, the help lines are always available to you here, permission or not.";
+
 const SendInput = z.object({
   thread_id: z.string().uuid().optional(),
   content: z.string().trim().min(1).max(4000),
@@ -300,6 +304,44 @@ async function prepareChatTurn(
     };
   }
 
+  // --- Teen guardian consent: held AFTER the crisis gate on purpose, so a
+  // teen waiting on a guardian still gets crisis resources, and only the
+  // ordinary companion reply is withheld. ---
+  const { companionAllowed } = await import("./guardian-consent.server");
+  const consentState = await companionAllowed(supabase, userId).catch(() => ({
+    allowed: true,
+    reason: "ok" as const,
+  }));
+  if (!consentState.allowed) {
+    const savedHold = await supabase
+      .from("chat_messages")
+      .insert({
+        thread_id: threadId,
+        user_id: userId,
+        sender: "system",
+        content: GUARDIAN_HOLD_MESSAGE,
+      })
+      .select("id, content, created_at")
+      .single();
+    if (savedHold.error) throw savedHold.error;
+
+    return {
+      done: true,
+      result: {
+        thread_id: threadId,
+        userMessage: { ...savedUser.data, sender: "user" as const },
+        reply: {
+          type: "message",
+          id: savedHold.data.id,
+          content: savedHold.data.content,
+          created_at: savedHold.data.created_at,
+          actions: [],
+        },
+      },
+    };
+  }
+
+
   // --- Per-user rate limit (normal chat path only; never gates crisis).
   // Both crisis checks above have already run and come up clear. Enforces a
   // short sliding window AND a tier-aware daily message cap; fails open. The
@@ -423,6 +465,18 @@ async function prepareChatTurn(
 
   const consented = profile.data?.ai_context_consent !== false;
 
+  // The safety plan is the person's own writing. The companion is told it
+  // EXISTS regardless (so it can point them to it), but only sees its contents
+  // when they consented to AI context.
+  const safetyPlanRow = await supabase
+    .from("safety_plans")
+    .select("warning_signs, coping_steps")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const planWarningSigns = safetyPlanRow.data?.warning_signs ?? [];
+  const planCopingSteps = safetyPlanRow.data?.coping_steps ?? [];
+  const hasPlan = Boolean(safetyPlanRow.data);
+
   const context: CompanionContext = {
     preferredName: profile.data?.preferred_name ?? null,
     accountType: profile.data?.account_type ?? null,
@@ -459,6 +513,9 @@ async function prepareChatTurn(
           ageDays: (Date.now() - new Date(row.created_at).getTime()) / 86_400_000,
         }))
       : [],
+    hasSafetyPlan: hasPlan,
+    safetyPlanWarningSigns: consented ? planWarningSigns : [],
+    safetyPlanCopingSteps: consented ? planCopingSteps : [],
   };
 
   return {

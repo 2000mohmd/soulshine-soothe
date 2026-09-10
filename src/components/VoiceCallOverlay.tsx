@@ -145,6 +145,21 @@ export function VoiceCallOverlay({
     return () => clearInterval(timer);
   }, [status]);
 
+  // AI disclosure: a voice that sounds human is easy to mistake for one, so the
+  // reminder is repeated on screen every five minutes, plus once near the cutoff.
+  const [reminder, setReminder] = useState<string | null>(null);
+  useEffect(() => {
+    if (status !== "live" || seconds === 0) return;
+    if (seconds === 25 * 60) setReminder(t("call.aiReminderLate"));
+    else if (seconds % (5 * 60) === 0) setReminder(t("call.aiReminder"));
+  }, [seconds, status, t]);
+
+  useEffect(() => {
+    if (!reminder) return;
+    const hide = setTimeout(() => setReminder(null), 12_000);
+    return () => clearTimeout(hide);
+  }, [reminder]);
+
   const hangUp = async () => {
     setStatus("ended");
     await teardown("user_ended");
@@ -155,6 +170,15 @@ export function VoiceCallOverlay({
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-background/95 px-6 text-center backdrop-blur">
+      {/* Permanent, unmissable: this voice is not a person. */}
+      <p className="absolute top-5 rounded-full border border-border bg-card px-3 py-1.5 text-[0.7rem] uppercase tracking-wide text-muted-foreground">
+        {t("call.aiLabel")}
+      </p>
+      {reminder && (
+        <p className="absolute top-16 max-w-sm rounded-2xl border border-primary/25 bg-primary/5 px-4 py-2 text-xs leading-relaxed">
+          {reminder}
+        </p>
+      )}
       <span className="flex size-16 items-center justify-center rounded-3xl bg-secondary">
         <KalmLogo className="size-8 text-primary" aria-hidden />
       </span>

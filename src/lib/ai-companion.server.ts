@@ -41,6 +41,10 @@ export type CompanionContext = {
   dailyPromptResponses?: { prompt: string; response: string; when: string }[];
   /** Still-pending things the person said they'd try, from an earlier chat. */
   openCommitments?: { description: string; ageDays: number }[];
+  /** Whether they've written a personal safety plan (contents only if consented). */
+  hasSafetyPlan?: boolean;
+  safetyPlanWarningSigns?: string[];
+  safetyPlanCopingSteps?: string[];
 };
 
 const QUICK_ACTION_GUIDANCE: Record<string, string> = {
@@ -108,6 +112,19 @@ export function buildSystemPrompt(ctx: CompanionContext): string {
     lines.push(
       "They are already working with a professional — support that relationship, never contradict or replace it.",
     );
+  if (ctx.hasSafetyPlan) {
+    lines.push(
+      "They have written a personal safety plan in this app (their own words: warning signs, what helps, who they can reach). You may gently remind them it exists when they are struggling — 'you wrote some things down for moments like this' — and encourage them to open it. Never claim to have written it, and never read it out wholesale.",
+    );
+    if (ctx.safetyPlanWarningSigns?.length)
+      lines.push(`Warning signs they named themselves: ${ctx.safetyPlanWarningSigns.join("; ")}`);
+    if (ctx.safetyPlanCopingSteps?.length)
+      lines.push(`What they said helps them settle: ${ctx.safetyPlanCopingSteps.join("; ")}`);
+  } else {
+    lines.push(
+      "They have NOT written a personal safety plan yet. If a calm moment makes it natural, you may offer once — warmly and optionally — that they can write down their own warning signs, what helps, and who they'd reach out to, from the shield button at the top of this screen. Never push it, and never raise it mid-crisis.",
+    );
+  }
 
   if (ctx.recentMoods.length) {
     const summary = ctx.recentMoods

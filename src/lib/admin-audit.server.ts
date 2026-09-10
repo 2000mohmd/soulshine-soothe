@@ -6,7 +6,10 @@ export type AuditAction =
   | "resolved_crisis_event"
   | "replied_support_ticket"
   | "granted_role"
-  | "revoked_role";
+  | "revoked_role"
+  | "claimed_human_support_request"
+  | "closed_human_support_request"
+  | "replied_human_support_request";
 
 export type AuditEntryInput = {
   adminUserId: string;

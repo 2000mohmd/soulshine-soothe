@@ -6,7 +6,18 @@ import { getMyProfile } from "@/lib/onboarding.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowUp, LifeBuoy, Loader2, Mic, PanelLeft, Phone, Square, Trash2 } from "lucide-react";
+import {
+  ArrowUp,
+  LifeBuoy,
+  Loader2,
+  Mic,
+  PanelLeft,
+  Phone,
+  ShieldCheck,
+  Square,
+  Trash2,
+  UserRound,
+} from "lucide-react";
 import {
   createThread,
   deleteThread,
@@ -22,6 +33,9 @@ import { DailyPromptCard } from "@/components/DailyPromptCard";
 import { InlineExerciseWidget } from "@/components/InlineExerciseWidget";
 import { AppSidebar } from "@/components/AppSidebar";
 import { VoiceCallOverlay } from "@/components/VoiceCallOverlay";
+import { SafetyPlanPanel } from "@/components/SafetyPlanPanel";
+import { HumanSupportPanel } from "@/components/HumanSupportPanel";
+import { GuardianConsentNotice } from "@/components/GuardianConsentNotice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/lib/i18n";
 
@@ -45,7 +59,13 @@ export const Route = createFileRoute("/_authenticated/chat")({
   component: ChatPage,
 });
 
-function CrisisCard() {
+function CrisisCard({
+  onOpenPlan,
+  onAskHuman,
+}: {
+  onOpenPlan?: () => void;
+  onAskHuman?: () => void;
+}) {
   const { t, language } = useTranslation();
   const copy = crisisCopy(language);
   return (
@@ -61,6 +81,30 @@ function CrisisCard() {
           </li>
         ))}
       </ul>
+      {(onOpenPlan || onAskHuman) && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {onOpenPlan && (
+            <button
+              type="button"
+              onClick={onOpenPlan}
+              className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted"
+            >
+              <ShieldCheck className="size-3.5" aria-hidden />
+              {t("safetyPlan.open")}
+            </button>
+          )}
+          {onAskHuman && (
+            <button
+              type="button"
+              onClick={onAskHuman}
+              className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs text-primary-foreground"
+            >
+              <UserRound className="size-3.5" aria-hidden />
+              {t("humanSupport.button")}
+            </button>
+          )}
+        </div>
+      )}
       <p className="mt-3 text-xs text-muted-foreground">{copy.disclaimer}</p>
     </div>
   );
@@ -168,6 +212,8 @@ function ChatPage() {
   const [pending, setPending] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [callOpen, setCallOpen] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
+  const [humanOpen, setHumanOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -329,6 +375,24 @@ function ChatPage() {
           </h1>
           <button
             type="button"
+            onClick={() => setPlanOpen(true)}
+            aria-label={t("safetyPlan.open")}
+            className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <ShieldCheck className="size-3.5" aria-hidden />
+            <span className="hidden lg:inline">{t("safetyPlan.open")}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setHumanOpen(true)}
+            aria-label={t("humanSupport.button")}
+            className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <UserRound className="size-3.5" aria-hidden />
+            <span className="hidden lg:inline">{t("humanSupport.button")}</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setCallOpen(true)}
             className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
           >
@@ -340,6 +404,8 @@ function ChatPage() {
         {/* Transcript: assistant text sits plain on the page, user text in a soft bubble. */}
         <div className="min-h-0 flex-1 overflow-y-auto px-4">
           <div className="mx-auto w-full max-w-2xl space-y-7 py-6">
+            <GuardianConsentNotice />
+
             {empty && (
               <div className="flex flex-col items-center gap-4 py-16 text-center">
                 <span className="flex size-12 items-center justify-center rounded-2xl bg-secondary">
@@ -373,10 +439,35 @@ function ChatPage() {
                 >
                   {message.content}
                 </div>
+              ) : message.content_type === "human_support" ? (
+                // A real person's reply, always labelled as such so it is never
+                // mistaken for the companion.
+                <div
+                  key={message.id}
+                  className="rounded-2xl border border-primary/25 bg-primary/5 p-4"
+                >
+                  <p className="flex items-center gap-1.5 text-[0.7rem] uppercase tracking-wide text-primary">
+                    <UserRound className="size-3.5" aria-hidden />
+                    {t("humanSupport.inChat")}
+                  </p>
+                  <p className="mt-2 whitespace-pre-line text-sm leading-relaxed">
+                    {message.content}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setHumanOpen(true)}
+                    className="mt-3 rounded-full border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted"
+                  >
+                    {t("humanSupport.send")}
+                  </button>
+                </div>
               ) : message.sender === "system" ? (
                 <div key={message.id} className="space-y-3">
                   <p className="text-sm leading-relaxed">{message.content}</p>
-                  <CrisisCard />
+                  <CrisisCard
+                    onOpenPlan={() => setPlanOpen(true)}
+                    onAskHuman={() => setHumanOpen(true)}
+                  />
                 </div>
               ) : message.sender === "user" ? (
                 <div key={message.id} className="flex justify-end">
@@ -543,6 +634,18 @@ function ChatPage() {
           threadId={threadId}
           onClose={() => {
             setCallOpen(false);
+            void queryClient.invalidateQueries({ queryKey: ["chat-thread", threadId] });
+          }}
+        />
+      )}
+
+      {planOpen && <SafetyPlanPanel onClose={() => setPlanOpen(false)} />}
+
+      {humanOpen && (
+        <HumanSupportPanel
+          threadId={threadId}
+          onClose={() => {
+            setHumanOpen(false);
             void queryClient.invalidateQueries({ queryKey: ["chat-thread", threadId] });
           }}
         />
