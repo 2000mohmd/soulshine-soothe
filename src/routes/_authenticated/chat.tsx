@@ -439,10 +439,35 @@ function ChatPage() {
                 >
                   {message.content}
                 </div>
+              ) : message.content_type === "human_support" ? (
+                // A real person's reply, always labelled as such so it is never
+                // mistaken for the companion.
+                <div
+                  key={message.id}
+                  className="rounded-2xl border border-primary/25 bg-primary/5 p-4"
+                >
+                  <p className="flex items-center gap-1.5 text-[0.7rem] uppercase tracking-wide text-primary">
+                    <UserRound className="size-3.5" aria-hidden />
+                    {t("humanSupport.inChat")}
+                  </p>
+                  <p className="mt-2 whitespace-pre-line text-sm leading-relaxed">
+                    {message.content}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setHumanOpen(true)}
+                    className="mt-3 rounded-full border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted"
+                  >
+                    {t("humanSupport.send")}
+                  </button>
+                </div>
               ) : message.sender === "system" ? (
                 <div key={message.id} className="space-y-3">
                   <p className="text-sm leading-relaxed">{message.content}</p>
-                  <CrisisCard />
+                  <CrisisCard
+                    onOpenPlan={() => setPlanOpen(true)}
+                    onAskHuman={() => setHumanOpen(true)}
+                  />
                 </div>
               ) : message.sender === "user" ? (
                 <div key={message.id} className="flex justify-end">
