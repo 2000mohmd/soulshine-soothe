@@ -404,6 +404,8 @@ function ChatPage() {
         {/* Transcript: assistant text sits plain on the page, user text in a soft bubble. */}
         <div className="min-h-0 flex-1 overflow-y-auto px-4">
           <div className="mx-auto w-full max-w-2xl space-y-7 py-6">
+            <GuardianConsentNotice />
+
             {empty && (
               <div className="flex flex-col items-center gap-4 py-16 text-center">
                 <span className="flex size-12 items-center justify-center rounded-2xl bg-secondary">
