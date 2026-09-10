@@ -160,6 +160,34 @@ Not built yet:
 
 Recently built (was on this list):
 
+- **Personal safety plan** — `safety_plans` (owner-only RLS) +
+  `src/lib/safety-plan.functions.ts`, edited in `src/components/SafetyPlanPanel.tsx`,
+  a slide-over inside `/chat` (header button + a button on the crisis card). No new
+  member page. The companion is told a plan exists, and its warning signs / coping
+  steps are only injected when `ai_context_consent` is true.
+- **Connect to a human now** — `human_support_requests` / `human_support_messages`,
+  `src/lib/human-handoff.{functions,server}.ts`, member UI in
+  `src/components/HumanSupportPanel.tsx` (chat header + crisis card). A request
+  carries an AI-written handover note (Haiku via OpenRouter, fails open to "no
+  summary available"), severity, preferred name, language and timezone. The desk is
+  `src/routes/_authenticated/admin/human.tsx` (claim / reply / close, waiting badge);
+  admin replies mirror into the member's chat as `content_type: "human_support"`,
+  labelled as a person, never as the companion. Requests fire the admin alert email
+  and join the 30-minute unclaimed escalation sweep. Created **after** the crisis
+  gate, never in place of it.
+- **AI-disclosure reminders in voice calls** — `src/components/VoiceCallOverlay.tsx`
+  shows a permanent "AI, not a person" label, a spoken + on-screen line at call
+  start, a repeat every 5 minutes, and one near the 30-minute cutoff. EN/AR/FR.
+- **Parental consent for 13-17** — the server computes age, sets
+  `profiles.guardian_consent_required`, and onboarding's first step asks under-18s
+  for a guardian email; `guardian_consents` stores a hashed one-time token plus who
+  consented, when, from which email, and the IP/user-agent. The guardian approves or
+  withdraws from `/api/public/guardian-consent`, which renders its own confirmation.
+  Until consent lands, `src/components/GuardianConsentNotice.tsx` shows a waiting
+  state in chat and companion replies + voice calls are held back server-side —
+  crisis resources are never gated. Consent state is visible in admin user detail.
+
+
 - **Voice notes** — the chat mic records, converts to mono 16 kHz WAV in the
   browser, and transcribes server-side through **OpenAI**
   (`gpt-4o-mini-transcribe`, `OPENAI_API_KEY`) so all voice — notes and live

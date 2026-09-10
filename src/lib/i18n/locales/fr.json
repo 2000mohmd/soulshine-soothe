@@ -141,6 +141,8 @@
       "aiOptIn": "Facultatif : autoriser Kalm à utiliser mes check-ins et ma présentation pour personnaliser les conversations. Vous pouvez le désactiver à tout moment.",
       "dobLabel": "Votre date de naissance",
       "dobHint": "Elle sert à adapter le contenu et la sécurité à votre âge. Elle n'est pas partagée.",
+      "guardianTitle": "L'e-mail d'un parent ou tuteur",
+      "guardianHint": "Comme vous avez moins de 18 ans, nous lui écrirons pour demander son accord avant que le compagnon puisse vous parler. Les lignes d'écoute restent accessibles dans tous les cas.",
       "under13": "Kalm est destiné aux personnes de {{min}} ans et plus."
     },
     "mode": {

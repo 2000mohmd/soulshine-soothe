@@ -78,6 +78,8 @@ function OnboardingPage() {
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [aiContextConsent, setAiContextConsent] = useState(true);
   const [dob, setDob] = useState("");
+  const [guardianEmail, setGuardianEmail] = useState("");
+  const [guardianName, setGuardianName] = useState("");
   const [accountType, setAccountType] = useState<(typeof MODES)[number]>("general");
   const [preferredName, setPreferredName] = useState("");
   const [introText, setIntroText] = useState("");
@@ -125,6 +127,8 @@ function OnboardingPage() {
           privacy_consent: true as const,
           ai_context_consent: aiContextConsent,
           date_of_birth: dob,
+          guardian_email: isMinor ? guardianEmail.trim() || null : null,
+          guardian_name: isMinor ? guardianName.trim() || null : null,
           intro_text: introText.trim(),
           goals,
           stressors,
@@ -152,7 +156,7 @@ function OnboardingPage() {
   });
 
   const canContinue = [
-    privacyConsent && ageOk,
+    privacyConsent && ageOk && (!isMinor || guardianEmail.trim().includes("@")),
     Boolean(accountType),
     preferredName.trim().length > 0,
     mood !== null,
@@ -251,6 +255,31 @@ function OnboardingPage() {
                   </p>
                 )}
               </div>
+              {isMinor && (
+                <div className="space-y-2 rounded-2xl border border-primary/25 bg-primary/5 p-4">
+                  <Label htmlFor="guardian-email">
+                    {t("onboarding.consent.guardianTitle")}
+                  </Label>
+                  <Input
+                    id="guardian-email"
+                    type="email"
+                    value={guardianEmail}
+                    placeholder={t("guardian.emailLabel")}
+                    onChange={(event) => setGuardianEmail(event.target.value)}
+                    className="w-full sm:w-72"
+                  />
+                  <Input
+                    id="guardian-name"
+                    value={guardianName}
+                    placeholder={t("guardian.nameLabel")}
+                    onChange={(event) => setGuardianName(event.target.value)}
+                    className="w-full sm:w-72"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t("onboarding.consent.guardianHint")}
+                  </p>
+                </div>
+              )}
               <label className="flex cursor-pointer items-start gap-3">
                 <Checkbox
                   checked={aiContextConsent}

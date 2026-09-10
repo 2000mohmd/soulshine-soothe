@@ -11,5 +11,10 @@
 - [x] "Creating your plan" screen at the end of onboarding (shows the plan + focus areas)
 - [x] Voice notes moved to OpenAI transcription (one provider for all voice)
 - [x] Live voice call button in chat + WebRTC call screen on the existing session API
+- [x] Personal safety plan (chat slide-over, owner-only, offered on the crisis card)
+- [x] "Connect to a human now" + 24/7 admin human-support desk with AI handover note
+- [x] AI-disclosure reminders during voice calls (start, every 5 min, near cutoff)
+- [x] Parental consent for 13-17 (guardian email at onboarding, approve/withdraw link)
 - [ ] Stripe Customer Portal: allow switching across the four prices with proration (dashboard config, user action)
+- [ ] Native review of French/Arabic clinical + safety copy
 
