@@ -375,6 +375,24 @@ function ChatPage() {
           </h1>
           <button
             type="button"
+            onClick={() => setPlanOpen(true)}
+            aria-label={t("safetyPlan.open")}
+            className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <ShieldCheck className="size-3.5" aria-hidden />
+            <span className="hidden lg:inline">{t("safetyPlan.open")}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setHumanOpen(true)}
+            aria-label={t("humanSupport.button")}
+            className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <UserRound className="size-3.5" aria-hidden />
+            <span className="hidden lg:inline">{t("humanSupport.button")}</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setCallOpen(true)}
             className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
           >
