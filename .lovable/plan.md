@@ -52,7 +52,7 @@ Where it lives — entirely in chat:
 - New tables: `safety_plans` (one per user, owner-only RLS), `human_support_requests` + `human_support_messages` (member reads own, admins read all), `guardian_consents` (service-role writes, member reads own). GRANTs and policies with every table.
 - Server functions in `src/lib/safety-plan.functions.ts`, `src/lib/human-handoff.functions.ts`, `src/lib/guardian-consent.functions.ts`; admin-side reads in matching `.server.ts` helpers, mirroring the existing support/crisis split.
 - Handoff summary generated through the existing OpenRouter helper, failing open to a plain "no summary available" so the request always reaches the queue.
-- Guardian consent link: signed token route under `src/routes/api/public/*` for the approval action, with a public confirmation page.
+- Guardian consent link: signed token endpoint under `src/routes/api/public/*` that the guardian opens from their email and which renders its own confirmation directly — no member-facing page added.
 - Crisis-gate ordering guarantee is preserved; handoff requests are created after the gate, never in place of it.
 - Emails reuse the existing Resend paths (`crisis-alert.server.ts`, `support.server.ts` patterns).
 - `docs/PROJECT_OVERVIEW.md` and `roadmap.md` updated in the same change.
