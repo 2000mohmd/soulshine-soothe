@@ -255,6 +255,31 @@ function OnboardingPage() {
                   </p>
                 )}
               </div>
+              {isMinor && (
+                <div className="space-y-2 rounded-2xl border border-primary/25 bg-primary/5 p-4">
+                  <Label htmlFor="guardian-email">
+                    {t("onboarding.consent.guardianTitle")}
+                  </Label>
+                  <Input
+                    id="guardian-email"
+                    type="email"
+                    value={guardianEmail}
+                    placeholder={t("guardian.emailLabel")}
+                    onChange={(event) => setGuardianEmail(event.target.value)}
+                    className="w-full sm:w-72"
+                  />
+                  <Input
+                    id="guardian-name"
+                    value={guardianName}
+                    placeholder={t("guardian.nameLabel")}
+                    onChange={(event) => setGuardianName(event.target.value)}
+                    className="w-full sm:w-72"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t("onboarding.consent.guardianHint")}
+                  </p>
+                </div>
+              )}
               <label className="flex cursor-pointer items-start gap-3">
                 <Checkbox
                   checked={aiContextConsent}
