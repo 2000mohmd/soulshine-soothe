@@ -513,6 +513,9 @@ async function prepareChatTurn(
           ageDays: (Date.now() - new Date(row.created_at).getTime()) / 86_400_000,
         }))
       : [],
+    hasSafetyPlan: hasPlan,
+    safetyPlanWarningSigns: consented ? planWarningSigns : [],
+    safetyPlanCopingSteps: consented ? planCopingSteps : [],
   };
 
   return {
