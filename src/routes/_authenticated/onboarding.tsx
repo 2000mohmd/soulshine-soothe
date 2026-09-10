@@ -78,6 +78,8 @@ function OnboardingPage() {
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [aiContextConsent, setAiContextConsent] = useState(true);
   const [dob, setDob] = useState("");
+  const [guardianEmail, setGuardianEmail] = useState("");
+  const [guardianName, setGuardianName] = useState("");
   const [accountType, setAccountType] = useState<(typeof MODES)[number]>("general");
   const [preferredName, setPreferredName] = useState("");
   const [introText, setIntroText] = useState("");
@@ -125,6 +127,8 @@ function OnboardingPage() {
           privacy_consent: true as const,
           ai_context_consent: aiContextConsent,
           date_of_birth: dob,
+          guardian_email: isMinor ? guardianEmail.trim() || null : null,
+          guardian_name: isMinor ? guardianName.trim() || null : null,
           intro_text: introText.trim(),
           goals,
           stressors,
@@ -152,7 +156,7 @@ function OnboardingPage() {
   });
 
   const canContinue = [
-    privacyConsent && ageOk,
+    privacyConsent && ageOk && (!isMinor || guardianEmail.trim().includes("@")),
     Boolean(accountType),
     preferredName.trim().length > 0,
     mood !== null,
