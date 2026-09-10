@@ -638,6 +638,18 @@ function ChatPage() {
           }}
         />
       )}
+
+      {planOpen && <SafetyPlanPanel onClose={() => setPlanOpen(false)} />}
+
+      {humanOpen && (
+        <HumanSupportPanel
+          threadId={threadId}
+          onClose={() => {
+            setHumanOpen(false);
+            void queryClient.invalidateQueries({ queryKey: ["chat-thread", threadId] });
+          }}
+        />
+      )}
     </div>
   );
 }
