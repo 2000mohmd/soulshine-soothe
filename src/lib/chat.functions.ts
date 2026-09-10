@@ -300,6 +300,44 @@ async function prepareChatTurn(
     };
   }
 
+  // --- Teen guardian consent: held AFTER the crisis gate on purpose, so a
+  // teen waiting on a guardian still gets crisis resources, and only the
+  // ordinary companion reply is withheld. ---
+  const { companionAllowed } = await import("./guardian-consent.server");
+  const consentState = await companionAllowed(supabase, userId).catch(() => ({
+    allowed: true,
+    reason: "ok" as const,
+  }));
+  if (!consentState.allowed) {
+    const savedHold = await supabase
+      .from("chat_messages")
+      .insert({
+        thread_id: threadId,
+        user_id: userId,
+        sender: "system",
+        content: GUARDIAN_HOLD_MESSAGE,
+      })
+      .select("id, content, created_at")
+      .single();
+    if (savedHold.error) throw savedHold.error;
+
+    return {
+      done: true,
+      result: {
+        thread_id: threadId,
+        userMessage: { ...savedUser.data, sender: "user" as const },
+        reply: {
+          type: "message",
+          id: savedHold.data.id,
+          content: savedHold.data.content,
+          created_at: savedHold.data.created_at,
+          actions: [],
+        },
+      },
+    };
+  }
+
+
   // --- Per-user rate limit (normal chat path only; never gates crisis).
   // Both crisis checks above have already run and come up clear. Enforces a
   // short sliding window AND a tier-aware daily message cap; fails open. The
