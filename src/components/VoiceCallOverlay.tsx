@@ -145,6 +145,21 @@ export function VoiceCallOverlay({
     return () => clearInterval(timer);
   }, [status]);
 
+  // AI disclosure: a voice that sounds human is easy to mistake for one, so the
+  // reminder is repeated on screen every five minutes, plus once near the cutoff.
+  const [reminder, setReminder] = useState<string | null>(null);
+  useEffect(() => {
+    if (status !== "live" || seconds === 0) return;
+    if (seconds === 25 * 60) setReminder(t("call.aiReminderLate"));
+    else if (seconds % (5 * 60) === 0) setReminder(t("call.aiReminder"));
+  }, [seconds, status, t]);
+
+  useEffect(() => {
+    if (!reminder) return;
+    const hide = setTimeout(() => setReminder(null), 12_000);
+    return () => clearTimeout(hide);
+  }, [reminder]);
+
   const hangUp = async () => {
     setStatus("ended");
     await teardown("user_ended");
