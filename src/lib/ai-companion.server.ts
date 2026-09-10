@@ -41,6 +41,10 @@ export type CompanionContext = {
   dailyPromptResponses?: { prompt: string; response: string; when: string }[];
   /** Still-pending things the person said they'd try, from an earlier chat. */
   openCommitments?: { description: string; ageDays: number }[];
+  /** Whether they've written a personal safety plan (contents only if consented). */
+  hasSafetyPlan?: boolean;
+  safetyPlanWarningSigns?: string[];
+  safetyPlanCopingSteps?: string[];
 };
 
 const QUICK_ACTION_GUIDANCE: Record<string, string> = {
