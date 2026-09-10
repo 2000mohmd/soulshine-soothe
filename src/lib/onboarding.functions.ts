@@ -94,8 +94,42 @@ export async function completeOnboardingCore(
         age_confirmed_13_plus: age >= MIN_AGE,
         consent_accepted_at: new Date().toISOString(),
         onboarding_completed: true,
+        // Under 18 needs a guardian's permission before the companion talks.
+        guardian_consent_required: age < MINOR_AGE,
       } as never, { onConflict: "id" });
     if (profileError) throw profileError;
+
+    // Send the guardian their consent request straight away when we have the
+    // address. Best-effort: onboarding must still finish if the email fails,
+    // and they can resend it from the note at the top of the chat screen.
+    if (age < MINOR_AGE && data.guardian_email) {
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { newConsentToken, sendGuardianConsentEmail } = await import(
+          "./guardian-consent.server"
+        );
+        const { token, hash } = newConsentToken();
+        await supabaseAdmin.from("guardian_consents").upsert(
+          {
+            user_id: userId,
+            guardian_email: data.guardian_email,
+            guardian_name: data.guardian_name ?? null,
+            status: "pending",
+            token_hash: hash,
+            requested_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" },
+        );
+        await sendGuardianConsentEmail({
+          guardianEmail: data.guardian_email,
+          guardianName: data.guardian_name ?? null,
+          teenName: data.preferred_name,
+          token,
+        });
+      } catch (error) {
+        console.error("[onboarding] guardian consent request failed", error);
+      }
+    }
 
     const { error: introError } = await supabase.from("user_profiles").upsert(
       {
