@@ -10,6 +10,7 @@ import {
   requestGuardianConsent,
 } from "@/lib/guardian-consent.functions";
 import { useTranslation } from "@/lib/i18n";
+import { useSignedIn } from "@/hooks/use-signed-in";
 
 export function GuardianConsentNotice() {
   const { t } = useTranslation();
