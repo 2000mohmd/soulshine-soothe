@@ -10,6 +10,7 @@ import {
   requestGuardianConsent,
 } from "@/lib/guardian-consent.functions";
 import { useTranslation } from "@/lib/i18n";
+import { useSignedIn } from "@/hooks/use-signed-in";
 
 export function GuardianConsentNotice() {
   const { t } = useTranslation();
@@ -20,9 +21,17 @@ export function GuardianConsentNotice() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
 
+  const signedIn = useSignedIn();
   const { data } = useQuery({
     queryKey: ["guardian-consent"],
-    queryFn: () => fetchConsent(),
+    // A freshly minted token can briefly be rejected ("JWT issued at future")
+    // when the auth server clock is a few seconds ahead. Swallow failures so a
+    // transient auth error never takes the chat screen down; the interval and
+    // the retries below pick the answer up shortly after.
+    queryFn: () => fetchConsent().catch(() => null),
+    enabled: signedIn,
+    retry: 3,
+    retryDelay: 2000,
     refetchInterval: 30_000,
   });
 
