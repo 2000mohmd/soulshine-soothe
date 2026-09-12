@@ -25,7 +25,7 @@ export const RATE_LIMIT_MESSAGE =
   "Let's take a short breather — we've covered a lot quickly. Try again in a few minutes and I'll be right here.";
 
 const DAILY_LIMIT_MESSAGE =
-  "We've talked a lot today, so I'm going to pause here to keep this a healthy amount — I'll be right here tomorrow. If anything feels urgent in the meantime, please reach out to someone you trust or use the crisis resources.";
+  "You've reached your plan's message limit for today. Upgrade any time and we can pick this right back up — or I'll be right here again tomorrow.";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
