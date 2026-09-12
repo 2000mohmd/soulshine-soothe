@@ -180,11 +180,12 @@ function ChatPage() {
   const [quickAction, setQuickAction] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [actions, setActions] = useState<CompanionAction[]>([]);
+  const [dailyLimit, setDailyLimit] = useState<{ tier: string; resetsAt: string } | null>(null);
   const [pending, setPending] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [callOpen, setCallOpen] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
-  const [humanOpen, setHumanOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"ai" | "support">("ai");
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -237,6 +238,11 @@ function ChatPage() {
     },
     onSuccess: async (result) => {
       setActions(result.reply.type === "message" ? result.reply.actions : []);
+      setDailyLimit(
+        result.reply.type === "message" && result.reply.limit?.reason === "daily"
+          ? { tier: result.reply.limit.tier, resetsAt: result.reply.limit.resetsAt }
+          : null,
+      );
       setQuickAction(null);
       setThreadId(result.thread_id);
       await Promise.all([
@@ -268,6 +274,7 @@ function ChatPage() {
     onSuccess: async (thread) => {
       setThreadId(thread.id);
       setActions([]);
+      setDailyLimit(null);
       await queryClient.invalidateQueries({ queryKey: ["chat-threads"] });
     },
   });
@@ -283,7 +290,7 @@ function ChatPage() {
 
   function submit(text: string) {
     const value = text.trim();
-    if (!value || mutation.isPending) return;
+    if (!value || mutation.isPending || dailyLimit) return;
     setQuickAction(null);
     mutation.mutate(value);
   }
@@ -305,7 +312,11 @@ function ChatPage() {
               <li key={thread.id} className="group flex items-center">
                 <button
                   type="button"
-                  onClick={() => setThreadId(thread.id)}
+                  onClick={() => {
+                    setThreadId(thread.id);
+                    setActions([]);
+                    setDailyLimit(null);
+                  }}
                   className={`flex-1 truncate rounded-lg px-2.5 py-2 text-left text-sm transition-colors ${
                     threadId === thread.id
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
@@ -328,6 +339,9 @@ function ChatPage() {
         }
       />
 
+      {viewMode === "support" ? (
+        <HumanSupportPanel threadId={threadId} onBack={() => setViewMode("ai")} />
+      ) : (
       <section className="flex min-w-0 flex-1 flex-col">
         {/* Thread header, mirroring Claude's title bar. */}
         <header className="flex items-center gap-3 border-b border-border/70 px-4 py-3">
@@ -355,7 +369,7 @@ function ChatPage() {
           </button>
           <button
             type="button"
-            onClick={() => setHumanOpen(true)}
+            onClick={() => setViewMode("support")}
             aria-label={t("humanSupport.button")}
             className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
           >
@@ -426,16 +440,22 @@ function ChatPage() {
                   </p>
                   <button
                     type="button"
-                    onClick={() => setHumanOpen(true)}
+                    onClick={() => setViewMode("support")}
                     className="mt-3 rounded-full border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted"
                   >
                     {t("humanSupport.send")}
                   </button>
                 </div>
+              ) : message.content_type === "rate_limit" ? (
+                <div key={message.id} className="mx-auto w-fit max-w-[85%] text-center">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {message.content}
+                  </p>
+                </div>
               ) : message.sender === "system" ? (
                 <div key={message.id} className="space-y-3">
                   <p className="text-sm leading-relaxed">{message.content}</p>
-                  <CrisisCard onAskHuman={() => setHumanOpen(true)} />
+                  <CrisisCard onAskHuman={() => setViewMode("support")} />
                 </div>
               ) : message.sender === "user" ? (
                 <div key={message.id} className="flex justify-end">
@@ -493,6 +513,24 @@ function ChatPage() {
                     )}
                   </div>
                 ))}
+              </div>
+            )}
+
+            {dailyLimit && (
+              <div className="mx-auto w-full max-w-sm space-y-2 rounded-2xl border border-primary/25 bg-primary/5 p-4 text-center">
+                <p className="text-sm">
+                  {dailyLimit.tier === "premium" || dailyLimit.tier === "org"
+                    ? t("chat.dailyLimitReachedTop")
+                    : t("chat.dailyLimitUpgrade")}
+                </p>
+                {dailyLimit.tier !== "premium" && dailyLimit.tier !== "org" && (
+                  <Link
+                    to="/plans"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground"
+                  >
+                    {t("chat.upgradeCta")}
+                  </Link>
+                )}
               </div>
             )}
 
@@ -561,7 +599,7 @@ function ChatPage() {
                   <button
                     type="button"
                     aria-label={t("chat.sendMessage")}
-                    disabled={!input.trim() || busy}
+                    disabled={!input.trim() || busy || Boolean(dailyLimit)}
                     onClick={() => submit(input)}
                     className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-40"
                   >
@@ -577,8 +615,9 @@ function ChatPage() {
                   <button
                     key={action.id}
                     type="button"
-                    disabled={busy}
+                    disabled={busy || Boolean(dailyLimit)}
                     onClick={() => {
+                      if (dailyLimit) return;
                       setQuickAction(action.id);
                       mutation.mutate(action.prompt);
                     }}
@@ -596,6 +635,7 @@ function ChatPage() {
           </div>
         </div>
       </section>
+      )}
 
       {callOpen && (
         <VoiceCallOverlay
@@ -608,16 +648,6 @@ function ChatPage() {
       )}
 
       {planOpen && <SafetyPlanPanel onClose={() => setPlanOpen(false)} />}
-
-      {humanOpen && (
-        <HumanSupportPanel
-          threadId={threadId}
-          onClose={() => {
-            setHumanOpen(false);
-            void queryClient.invalidateQueries({ queryKey: ["chat-thread", threadId] });
-          }}
-        />
-      )}
     </div>
   );
 }
