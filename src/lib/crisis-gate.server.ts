@@ -24,6 +24,35 @@ export type CrisisGateResult = {
   updatedUserMessage: boolean;
 } | null;
 
+/**
+ * Only "critical" (explicit plan, method, or timeframe) interrupts the chat
+ * with a system message + the crisis card. "high" and "moderate" are still
+ * logged here — admins still see them in the crisis queue and get the alert
+ * email — but the conversation itself continues normally rather than showing
+ * the same takeover UI for passive/ambivalent language as for an active plan.
+ */
+async function logCrisisOnly(
+  supabase: AnyClient,
+  input: {
+    userId: string;
+    messageId: string;
+    source: string;
+    severity: "high" | "moderate";
+    matched: string[];
+    notes?: string | null;
+  },
+): Promise<void> {
+  const { logCrisisEvent } = await import("./crisis-alert.server");
+  await logCrisisEvent(supabase as never, {
+    userId: input.userId,
+    source: input.source,
+    severity: input.severity,
+    matchedTerms: input.matched,
+    messageId: input.messageId,
+    notes: input.notes ?? null,
+  });
+}
+
 async function recordCrisis(
   supabase: AnyClient,
   input: {
@@ -90,6 +119,16 @@ export async function runCrisisGate(
 
   if (triage.matched.length > 0) {
     const severity = triage.severity ?? "high";
+    if (severity !== "critical") {
+      await logCrisisOnly(supabase, {
+        userId: input.userId,
+        messageId: input.messageId,
+        source: "chat",
+        severity,
+        matched: triage.matched,
+      });
+      return null;
+    }
     const systemMessage = await recordCrisis(supabase, {
       ...input,
       source: "chat",
@@ -138,6 +177,18 @@ export async function runCrisisGate(
 
   const severity = semantic.severity ?? "high";
   await supabase.from("chat_messages").update({ flagged_crisis: true }).eq("id", input.messageId);
+
+  if (severity !== "critical") {
+    await logCrisisOnly(supabase, {
+      userId: input.userId,
+      messageId: input.messageId,
+      source: "semantic_classifier",
+      severity,
+      matched: [],
+      notes: semantic.reason,
+    });
+    return null;
+  }
 
   const systemMessage = await recordCrisis(supabase, {
     ...input,

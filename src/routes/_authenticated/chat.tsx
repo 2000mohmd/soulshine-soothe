@@ -27,7 +27,6 @@ import {
 } from "@/lib/chat.functions";
 import { transcribeVoiceNote } from "@/lib/voice.functions";
 import type { CompanionAction } from "@/lib/companion-tools.server";
-import { crisisCopy } from "@/lib/crisis";
 import { QUICK_ACTIONS } from "@/lib/quick-actions";
 import { DailyPromptCard } from "@/components/DailyPromptCard";
 import { InlineExerciseWidget } from "@/components/InlineExerciseWidget";
@@ -59,53 +58,25 @@ export const Route = createFileRoute("/_authenticated/chat")({
   component: ChatPage,
 });
 
-function CrisisCard({
-  onOpenPlan,
-  onAskHuman,
-}: {
-  onOpenPlan?: () => void;
-  onAskHuman?: () => void;
-}) {
-  const { t, language } = useTranslation();
-  const copy = crisisCopy(language);
+function CrisisCard({ onAskHuman }: { onAskHuman?: () => void }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-5">
       <p className="flex items-center gap-2 font-semibold">
         <LifeBuoy className="size-4" aria-hidden /> {t("chat.immediateSupport")}
       </p>
-      <ul className="mt-3 space-y-2 text-sm">
-        {copy.resources.map((resource) => (
-          <li key={resource.name}>
-            <span className="font-medium">{resource.name}</span> — {resource.contact}
-            <span className="block text-xs text-muted-foreground">{resource.detail}</span>
-          </li>
-        ))}
-      </ul>
-      {(onOpenPlan || onAskHuman) && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {onOpenPlan && (
-            <button
-              type="button"
-              onClick={onOpenPlan}
-              className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted"
-            >
-              <ShieldCheck className="size-3.5" aria-hidden />
-              {t("safetyPlan.open")}
-            </button>
-          )}
-          {onAskHuman && (
-            <button
-              type="button"
-              onClick={onAskHuman}
-              className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs text-primary-foreground"
-            >
-              <UserRound className="size-3.5" aria-hidden />
-              {t("humanSupport.button")}
-            </button>
-          )}
+      {onAskHuman && (
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={onAskHuman}
+            className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs text-primary-foreground"
+          >
+            <UserRound className="size-3.5" aria-hidden />
+            {t("humanSupport.button")}
+          </button>
         </div>
       )}
-      <p className="mt-3 text-xs text-muted-foreground">{copy.disclaimer}</p>
     </div>
   );
 }
@@ -464,10 +435,7 @@ function ChatPage() {
               ) : message.sender === "system" ? (
                 <div key={message.id} className="space-y-3">
                   <p className="text-sm leading-relaxed">{message.content}</p>
-                  <CrisisCard
-                    onOpenPlan={() => setPlanOpen(true)}
-                    onAskHuman={() => setHumanOpen(true)}
-                  />
+                  <CrisisCard onAskHuman={() => setHumanOpen(true)} />
                 </div>
               ) : message.sender === "user" ? (
                 <div key={message.id} className="flex justify-end">
