@@ -1,11 +1,14 @@
-// "Connect me to a person" — lives inside the chat screen as a slide-over.
-// The member sees the state of their request and can write to whoever picks it
-// up; replies from the team also appear in the chat transcript itself.
-import { useState } from "react";
+// "Talk to a person" — a dedicated pane inside the chat screen itself (a mode
+// switch, not an overlay), so the whole conversation with the support team
+// reads like part of the same chat rather than a separate floating widget.
+// Replies from the team also get mirrored into the AI transcript itself
+// (see admin-handoff.functions.ts), clearly labelled, so nothing is missed
+// if the member switches back before they've read it here.
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, Send, UserRound, X } from "lucide-react";
+import { ArrowLeft, Loader2, Send, UserRound } from "lucide-react";
 import {
   getMyHumanSupport,
   replyToMyHumanSupport,
@@ -15,10 +18,10 @@ import { useTranslation } from "@/lib/i18n";
 
 export function HumanSupportPanel({
   threadId,
-  onClose,
+  onBack,
 }: {
   threadId: string | null;
-  onClose: () => void;
+  onBack: () => void;
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -26,16 +29,21 @@ export function HumanSupportPanel({
   const createRequest = useServerFn(requestHumanSupport);
   const sendReply = useServerFn(replyToMyHumanSupport);
   const [text, setText] = useState("");
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["my-human-support"],
     queryFn: () => fetchRequest(),
-    // A person may pick this up while the panel is open.
+    // A person may pick this up while the pane is open.
     refetchInterval: 20_000,
   });
 
   const request = data?.request ?? null;
   const active = request && request.status !== "closed" ? request : null;
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [active?.messages.length]);
 
   const ask = useMutation({
     mutationFn: () => createRequest({ data: { thread_id: threadId ?? null } }),
@@ -47,14 +55,14 @@ export function HumanSupportPanel({
   });
 
   const reply = useMutation({
-    mutationFn: (content: string) =>
-      sendReply({ data: { request_id: active?.id as string, content } }),
+    mutationFn: (message: string) =>
+      sendReply({ data: { request_id: active?.id as string, message } }),
     onMutate: () => setText(""),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["my-human-support"] });
     },
-    onError: (_error, content) => {
-      setText((current) => current || content);
+    onError: (_error, message) => {
+      setText((current) => current || message);
       toast.error(t("humanSupport.requestFailed"));
     },
   });
@@ -65,36 +73,33 @@ export function HumanSupportPanel({
       : t("humanSupport.statusQueued")
     : null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-foreground/20 backdrop-blur-sm">
-      <button
-        type="button"
-        aria-label={t("common.close")}
-        onClick={onClose}
-        className="flex-1 cursor-default"
-      />
-      <aside className="flex h-full w-full max-w-md flex-col border-s border-border bg-background shadow-xl">
-        <header className="flex items-start gap-3 border-b border-border px-5 py-4">
-          <div className="min-w-0 flex-1">
-            <h2 className="flex items-center gap-2 font-display text-lg">
-              <UserRound className="size-4 text-primary" aria-hidden />
-              {t("humanSupport.title")}
-            </h2>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              {t("humanSupport.intro")}
-            </p>
-          </div>
-          <button
-            type="button"
-            aria-label={t("common.close")}
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <X className="size-4" aria-hidden />
-          </button>
-        </header>
+  function submit() {
+    const value = text.trim();
+    if (!value || reply.isPending) return;
+    reply.mutate(value);
+  }
 
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
+  return (
+    <section className="flex min-w-0 flex-1 flex-col">
+      <header className="flex items-center gap-3 border-b border-border/70 px-4 py-3">
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label={t("humanSupport.backToChat")}
+          className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" aria-hidden />
+        </button>
+        <h1 className="flex min-w-0 flex-1 items-center gap-2 truncate font-display text-base">
+          <UserRound className="size-4 text-primary" aria-hidden />
+          {t("humanSupport.title")}
+        </h1>
+      </header>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-4">
+        <div className="mx-auto w-full max-w-2xl space-y-4 py-6">
+          <p className="text-sm text-muted-foreground">{t("humanSupport.intro")}</p>
+
           {isLoading && (
             <Loader2 className="size-4 animate-spin text-muted-foreground" aria-hidden />
           )}
@@ -120,23 +125,26 @@ export function HumanSupportPanel({
               {active.messages.length === 0 ? (
                 <p className="text-sm text-muted-foreground">{t("humanSupport.noMessages")}</p>
               ) : (
-                <ul className="space-y-3">
+                <ul className="space-y-4">
                   {active.messages.map((message) => (
-                    <li key={message.id} className="space-y-1">
-                      <p className="text-[0.7rem] uppercase tracking-wide text-muted-foreground">
-                        {message.sender === "user"
-                          ? t("humanSupport.youLabel")
-                          : t("humanSupport.teamLabel")}
-                      </p>
-                      <p
-                        className={`whitespace-pre-line rounded-2xl px-3 py-2 text-sm leading-relaxed ${
-                          message.sender === "user"
-                            ? "bg-secondary text-secondary-foreground"
-                            : "border border-border bg-card"
-                        }`}
-                      >
-                        {message.content}
-                      </p>
+                    <li
+                      key={message.id}
+                      className={message.sender === "user" ? "flex justify-end" : "space-y-1"}
+                    >
+                      {message.sender === "user" ? (
+                        <p className="max-w-[85%] whitespace-pre-line rounded-2xl bg-secondary px-4 py-2.5 text-sm leading-relaxed text-secondary-foreground">
+                          {message.content}
+                        </p>
+                      ) : (
+                        <div className="flex gap-3">
+                          <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/12">
+                            <UserRound className="size-3.5 text-primary" aria-hidden />
+                          </span>
+                          <p className="min-w-0 flex-1 whitespace-pre-line text-[0.95rem] leading-7">
+                            {message.content}
+                          </p>
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -147,30 +155,42 @@ export function HumanSupportPanel({
           {request && request.status === "closed" && (
             <p className="text-xs text-muted-foreground">{t("humanSupport.statusClosed")}</p>
           )}
-        </div>
 
-        {active && (
-          <footer className="flex items-end gap-2 border-t border-border px-5 py-4">
-            <textarea
-              rows={2}
-              maxLength={2000}
-              value={text}
-              placeholder={t("humanSupport.replyPlaceholder")}
-              onChange={(event) => setText(event.target.value)}
-              className="min-w-0 flex-1 resize-none rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary/50"
-            />
-            <button
-              type="button"
-              aria-label={t("humanSupport.send")}
-              disabled={!text.trim() || reply.isPending}
-              onClick={() => reply.mutate(text.trim())}
-              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-40"
-            >
-              <Send className="size-4" aria-hidden />
-            </button>
-          </footer>
-        )}
-      </aside>
-    </div>
+          <div ref={bottomRef} />
+        </div>
+      </div>
+
+      {active && (
+        <div className="shrink-0 px-4 pb-3">
+          <div className="mx-auto w-full max-w-2xl">
+            <div className="flex items-end gap-2 rounded-3xl border border-border bg-card p-2 shadow-sm focus-within:border-primary/40">
+              <textarea
+                rows={2}
+                maxLength={2000}
+                value={text}
+                placeholder={t("humanSupport.replyPlaceholder")}
+                onChange={(event) => setText(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    submit();
+                  }
+                }}
+                className="min-w-0 flex-1 resize-none bg-transparent px-3 py-2 text-sm leading-6 outline-none placeholder:text-muted-foreground"
+              />
+              <button
+                type="button"
+                aria-label={t("humanSupport.send")}
+                disabled={!text.trim() || reply.isPending}
+                onClick={submit}
+                className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-40"
+              >
+                <Send className="size-4" aria-hidden />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

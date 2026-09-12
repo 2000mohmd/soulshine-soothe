@@ -360,6 +360,7 @@ async function prepareChatTurn(
         thread_id: threadId,
         user_id: userId,
         sender: "system",
+        content_type: "rate_limit",
         content: decision.message ?? RATE_LIMIT_MESSAGE,
       })
       .select("id, content, created_at")

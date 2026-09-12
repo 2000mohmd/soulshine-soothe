@@ -95,6 +95,9 @@
   },
   "chat": {
     "immediateSupport": "Aide immédiate",
+    "dailyLimitUpgrade": "Vous avez utilisé vos messages gratuits d'aujourd'hui. Passez à un forfait supérieur pour en avoir plus, à tout moment.",
+    "dailyLimitReachedTop": "Vous avez atteint la limite de messages d'aujourd'hui. Elle se réinitialise demain.",
+    "upgradeCta": "Changer de forfait",
     "micBlocked": "L'accès au microphone est bloqué. Autorisez-le dans les paramètres de votre navigateur.",
     "replyFailed": "Le compagnon n'a pas pu répondre. Veuillez réessayer.",
     "transcribeFailed": "Impossible de transcrire cet enregistrement.",
@@ -630,6 +633,7 @@
   "humanSupport": {
     "button": "Parler à une personne",
     "title": "Parler à une personne",
+    "backToChat": "Retour à la discussion",
     "intro": "Nous transmettrons un court résumé de la situation à l'équipe de soutien de Kalm, et une vraie personne vous répondra ici. Kalm n'est pas un service d'urgence — si vous êtes en danger maintenant, utilisez les lignes ci-dessus.",
     "request": "Demander une personne",
     "requesting": "Envoi de votre demande…",
