@@ -82,14 +82,14 @@ describe("crisis gate ordering guarantee", () => {
     recentTurns: [],
   };
 
-  it("returns the crisis response without ever consulting the rate limiter", async () => {
+  it("returns the crisis response for critical (explicit plan) without ever consulting the rate limiter", async () => {
     const supabase = fakeSupabase();
     const result = await runCrisisGate(supabase, {
       ...input,
-      content: "I want to kill myself",
+      content: "I have the pills ready for tonight",
     });
     expect(result?.crisis.type).toBe("crisis");
-    expect(result?.crisis.severity).toBe("high");
+    expect(result?.crisis.severity).toBe("critical");
     expect(supabase.touched).not.toContain("chat_rate_limits");
   });
 
@@ -100,6 +100,41 @@ describe("crisis gate ordering guarantee", () => {
       content: "I had a decent day, just tired",
     });
     expect(result).toBeNull();
+    expect(supabase.touched).not.toContain("chat_rate_limits");
+  });
+
+  it("logs high severity for admin review but does not interrupt the chat", async () => {
+    const { logCrisisEvent } = await import("./crisis-alert.server");
+    const supabase = fakeSupabase();
+    const result = await runCrisisGate(supabase, {
+      ...input,
+      content: "I want to kill myself",
+    });
+    expect(result).toBeNull();
+    expect(vi.mocked(logCrisisEvent)).toHaveBeenCalledWith(
+      supabase,
+      expect.objectContaining({ severity: "high" }),
+    );
+    // Logged for admins, but never surfaced as a chat message or thread bump.
+    expect(supabase.touched).not.toContain("chat_messages");
+    expect(supabase.touched).not.toContain("chat_threads");
+    expect(supabase.touched).not.toContain("chat_rate_limits");
+  });
+
+  it("logs moderate severity for admin review but does not interrupt the chat", async () => {
+    const { logCrisisEvent } = await import("./crisis-alert.server");
+    const supabase = fakeSupabase();
+    const result = await runCrisisGate(supabase, {
+      ...input,
+      content: "I wish I could just disappear forever",
+    });
+    expect(result).toBeNull();
+    expect(vi.mocked(logCrisisEvent)).toHaveBeenCalledWith(
+      supabase,
+      expect.objectContaining({ severity: "moderate" }),
+    );
+    expect(supabase.touched).not.toContain("chat_messages");
+    expect(supabase.touched).not.toContain("chat_threads");
     expect(supabase.touched).not.toContain("chat_rate_limits");
   });
 
