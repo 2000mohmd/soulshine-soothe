@@ -158,6 +158,10 @@ an expired or revoked token is rejected, not just a malformed one.
 | GET | `/api/v1/export` | yes | therapist-shareable plain-text report |
 | DELETE | `/api/v1/export` | yes | wipe wellness data (**not** account deletion) |
 | DELETE | `/api/v1/account` | yes | full, irreversible account deletion |
+| GET | `/api/v1/support/threads` | yes | list the caller's account/billing support threads |
+| POST | `/api/v1/support/threads` | yes | open a new support thread |
+| GET | `/api/v1/support/threads/:id` | yes | a thread + its messages |
+| POST | `/api/v1/support/threads/:id/messages` | yes | reply on a support thread |
 | POST | `/api/v1/calls/sessions` | yes | start a live voice session (Pro/Premium only) |
 | GET | `/api/v1/calls/sessions` | yes | voice call history |
 | POST | `/api/v1/calls/sessions/:id/turns` | yes | record one spoken turn — crisis-gated |
@@ -707,7 +711,60 @@ After this succeeds, sign the local session out and clear any cached data.
 
 ---
 
-## 12. Voice calls (Pro / Premium only)
+## 12. Support (account & billing questions)
+
+**Deliberately separate from the crisis "Talk to a person" flow** (§5) —
+this is a low-stakes admin↔member channel for account issues and feedback,
+never a mental-health-support path. Backed by `support_threads` /
+`support_messages`, distinct tables from `human_support_requests`.
+
+### `GET /api/v1/support/threads`
+
+The caller's support threads, most recently updated first.
+
+```json
+{ "threads": [
+  { "id": "uuid", "subject": "…", "status": "open | in_progress | resolved",
+    "created_at": "…", "updated_at": "…",
+    "last_message": "string | null", "last_sender": "user | admin | null" }
+] }
+```
+
+### `POST /api/v1/support/threads`
+
+Opens a new thread.
+
+```json
+{ "subject": "string, 3-120 chars", "message": "string, 5-4000 chars" }
+```
+→ `{ "thread_id": "uuid" }`
+
+### `GET /api/v1/support/threads/:id`
+
+The full thread — status plus every message in order.
+
+```json
+{
+  "thread": { "id": "uuid", "subject": "…", "status": "…", "created_at": "…", "updated_at": "…" },
+  "messages": [ { "id": "uuid", "sender": "user | admin", "content": "…", "created_at": "…" } ]
+}
+```
+`404` if not owned by the caller.
+
+### `POST /api/v1/support/threads/:id/messages`
+
+Adds a message to an existing thread (the member's side).
+
+```json
+{ "message": "string, 2-4000 chars" }
+```
+→ `{ "ok": true }`. An admin reply sends the member an email notification
+with a short excerpt and a link back into the app — never the full reply
+body, so nothing sensitive leaks through an inbox.
+
+---
+
+## 13. Voice calls (Pro / Premium only)
 
 More involved than the rest — a live, streamed voice conversation over
 WebRTC via OpenAI's Realtime API. Budget extra implementation time if you
@@ -775,7 +832,7 @@ server-side by the time you get this response.
 
 ---
 
-## 13. Push notifications
+## 14. Push notifications
 
 FCM (Firebase Cloud Messaging) — one integration covers both iOS and
 Android, so the Flutter side only needs `firebase_messaging`.
@@ -802,7 +859,7 @@ notifications to arrive until the backend owner confirms that's set.
 
 ---
 
-## 14. Endpoints that exist but are not for the member-facing app
+## 15. Endpoints that exist but are not for the member-facing app
 
 `GET /api/v1/admin/users/:userId/cost` — internal cost-reporting for
 admins/super-admins only (`403` for anyone else). Never call this from the
@@ -810,17 +867,30 @@ regular member app.
 
 ---
 
-## 15. Known gaps to flag before you build against them
+## 16. Known gaps to flag before you build against them
 
 - **In-app purchase verification is not implemented** (§7.3) — plan the
   purchase flow around Stripe Checkout / the customer portal for now.
 - **Push sending requires server-side FCM config** that may not be set yet
-  (§13) — registration works regardless, delivery may not.
+  (§14) — registration works regardless, delivery may not.
 - **No CORS headers** on `/api/v1/*` — fine for native builds, a blocker for
   Flutter Web until added.
 - **No API versioning/deprecation headers** — this is "v1" in name only so
   far; coordinate directly with the backend owner before any breaking change
   ships.
+- **Call audio is never stored server-side, by design** (§13) — voice calls
+  run device-to-OpenAI directly over WebRTC using a short-lived
+  `client_secret`; the backend only ever sees the transcribed text turns
+  (`POST /calls/sessions/:id/turns`), never raw audio. There is no "download
+  the recording" endpoint and there won't be one under this architecture —
+  build your call UI around the transcript/summary, not an audio file.
+- **"Shareable data report" is a text blob, not a link or a PDF** — despite
+  what the original product brief says, `GET /api/v1/export` (§11) returns
+  `{ filename, content }` as **plain text**, for the app to hand to the
+  OS share sheet. There is no server-generated PDF and no shareable URL a
+  therapist could open without the person's login. If a PDF or a public link
+  is actually required, that's new work to scope with the backend owner —
+  don't spend time looking for an endpoint that already does it.
 - Two older docs (`docs/MOBILE_API.md`'s previous version and
   `docs/API_V1.md`) are now superseded by this file and were inconsistent
   with each other and with the actual code (missing streaming chat, voice
