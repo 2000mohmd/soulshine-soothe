@@ -263,13 +263,9 @@ async function prepareChatTurn(
     if (owned.error) throw owned.error;
     if (!owned.data) throw new Error("Thread not found");
   } else {
-    const created = await supabase
-      .from("chat_threads")
-      .insert({ user_id: userId, title: data.content.slice(0, 60) })
-      .select("id")
-      .single();
-    if (created.error) throw created.error;
-    threadId = created.data.id;
+    // One continuous conversation per member — reuse it, never open a new one.
+    const primary = await getOrCreatePrimaryThread(supabase, userId, data.content.slice(0, 60));
+    threadId = primary.id;
   }
 
   // --- Crisis gate: runs BEFORE any companion LLM call and BEFORE the
