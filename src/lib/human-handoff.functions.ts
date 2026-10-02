@@ -34,7 +34,7 @@ export type MyHumanSupportRequest = {
 export async function requestHumanSupportCore(
   supabase: SupabaseClient<Database>,
   userId: string,
-  data: { thread_id?: string | null; note?: string | null; severity?: string | null },
+  data: { thread_id?: string | null | undefined; note?: string | null | undefined; severity?: string | null | undefined },
 ) {
 
     // Reuse an open request instead of stacking duplicates when they press twice.
