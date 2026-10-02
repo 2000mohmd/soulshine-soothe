@@ -15,14 +15,11 @@ import {
   Phone,
   ShieldCheck,
   Square,
-  Trash2,
   UserRound,
 } from "lucide-react";
 import {
-  createThread,
-  deleteThread,
+  getPrimaryThread,
   getThreadHistory,
-  listThreads,
   sendMessage,
 } from "@/lib/chat.functions";
 import { transcribeVoiceNote } from "@/lib/voice.functions";

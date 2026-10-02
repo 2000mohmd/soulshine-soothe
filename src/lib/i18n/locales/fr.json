@@ -117,7 +117,9 @@
     "stopRecording": "Arrêter l'enregistrement",
     "recordVoice": "Enregistrer un message vocal",
     "sendMessage": "Envoyer le message",
-    "disclaimer": "Kalm est un compagnon IA, pas un thérapeute. En cas de crise, utilisez l'aide immédiate."
+    "disclaimer": "Kalm est un compagnon IA, pas un thérapeute. En cas de crise, utilisez l'aide immédiate.",
+    "limitCoachMessage": "Nous avons atteint la limite de messages de votre forfait pour aujourd'hui. Passez à un forfait supérieur pour que nous puissions continuer ensemble — j'aimerais poursuivre avec vous.",
+    "limitStillHere": "L'aide en cas de crise et les coachs humains restent toujours disponibles, et je serai là demain."
   },
   "quickActions": {
     "anxious": "Je me sens anxieux",
