@@ -47,18 +47,50 @@ export const listThreads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(({ context }) => listThreadsCore(context.supabase, context.userId));
 
+/**
+ * Each member has ONE continuous conversation with the coach (enforced by a
+ * unique index on chat_threads.user_id). Returns it, creating it on first use.
+ */
+export async function getOrCreatePrimaryThread(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  title = "Your conversation",
+) {
+  const existing = await supabase
+    .from("chat_threads")
+    .select("id, title, created_at, updated_at")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (existing.error) throw existing.error;
+  if (existing.data) return existing.data;
+  const created = await supabase
+    .from("chat_threads")
+    .insert({ user_id: userId, title })
+    .select("id, title, created_at, updated_at")
+    .single();
+  if (created.error) {
+    // Lost a race with a concurrent insert — read the winner.
+    const again = await supabase
+      .from("chat_threads")
+      .select("id, title, created_at, updated_at")
+      .eq("user_id", userId)
+      .limit(1)
+      .maybeSingle();
+    if (again.data) return again.data;
+    throw created.error;
+  }
+  return created.data;
+}
+
 export const createThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-    const { data, error } = await supabase
-      .from("chat_threads")
-      .insert({ user_id: userId })
-      .select("id, title, created_at, updated_at")
-      .single();
-    if (error) throw error;
-    return data;
-  });
+  .handler(({ context }) => getOrCreatePrimaryThread(context.supabase, context.userId));
+
+export const getPrimaryThread = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(({ context }) => getOrCreatePrimaryThread(context.supabase, context.userId));
 
 const MESSAGE_COLS =
   "id, sender, content, content_type, exercise_slug, flagged_crisis, quick_action, created_at";
