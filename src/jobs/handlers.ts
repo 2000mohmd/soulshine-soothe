@@ -8,7 +8,12 @@ export async function runJob(supabase: ServiceClient, job: Job): Promise<void> {
       const { findPreviousThread, ensureThreadSummary } =
         await import("@/lib/thread-summary.server");
       const previousThreadId = await findPreviousThread(supabase, job.userId, job.sinceThreadId);
-      if (!previousThreadId) return;
+      if (!previousThreadId) {
+        // Single ongoing conversation: keep its long-term memory rolling.
+        const { ensureRollingSummary } = await import("@/lib/thread-summary.server");
+        await ensureRollingSummary(supabase, job.userId, job.sinceThreadId);
+        return;
+      }
       // ensureThreadSummary is already no-op-if-exists and fail-open. It is also
       // where the Phase 11 session-drift crisis sweep runs — deferring it here
       // does not touch the per-message crisis gate, which runs earlier in
