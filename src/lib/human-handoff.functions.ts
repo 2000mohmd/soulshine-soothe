@@ -7,6 +7,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 export type HumanSupportMessage = {
   id: string;
@@ -25,18 +27,15 @@ export type MyHumanSupportRequest = {
   messages: HumanSupportMessage[];
 };
 
-export const requestHumanSupport = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z
-      .object({
-        thread_id: z.string().uuid().nullish(),
-        note: z.string().trim().max(2000).nullish(),
-      })
-      .parse(input ?? {}),
-  )
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+/**
+ * Creates (or reuses) a human-coach request. Shared by the "Connect to a human"
+ * button and the companion's request_human_support tool.
+ */
+export async function requestHumanSupportCore(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  data: { thread_id?: string | null; note?: string | null; severity?: string | null },
+) {
 
     // Reuse an open request instead of stacking duplicates when they press twice.
     const open = await supabase
@@ -86,7 +85,7 @@ export const requestHumanSupport = createServerFn({ method: "POST" })
       .insert({
         user_id: userId,
         thread_id: data.thread_id ?? null,
-        severity: recentFlag,
+        severity: data.severity ?? recentFlag,
         preferred_name: profile.data?.preferred_name ?? null,
         language: profile.data?.language ?? "en",
         timezone: profile.data?.timezone ?? null,
@@ -149,8 +148,20 @@ export const requestHumanSupport = createServerFn({ method: "POST" })
       console.error("[handoff] post-create steps failed", error);
     }
 
-    return { request_id: created.data.id, already_open: false, status: created.data.status };
-  });
+  return { request_id: created.data.id, already_open: false, status: created.data.status };
+}
+
+export const requestHumanSupport = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        thread_id: z.string().uuid().nullish(),
+        note: z.string().trim().max(2000).nullish(),
+      })
+      .parse(input ?? {}),
+  )
+  .handler(({ data, context }) => requestHumanSupportCore(context.supabase, context.userId, data));
 
 /** The member's current (or most recent) request plus its messages. */
 export const getMyHumanSupport = createServerFn({ method: "GET" })
