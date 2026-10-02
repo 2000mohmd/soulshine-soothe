@@ -15,14 +15,11 @@ import {
   Phone,
   ShieldCheck,
   Square,
-  Trash2,
   UserRound,
 } from "lucide-react";
 import {
-  createThread,
-  deleteThread,
+  getPrimaryThread,
   getThreadHistory,
-  listThreads,
   sendMessage,
 } from "@/lib/chat.functions";
 import { transcribeVoiceNote } from "@/lib/voice.functions";
@@ -169,10 +166,8 @@ function ChatPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fetchProfile = useServerFn(getMyProfile);
-  const fetchThreads = useServerFn(listThreads);
+  const fetchPrimary = useServerFn(getPrimaryThread);
   const fetchHistory = useServerFn(getThreadHistory);
-  const newThread = useServerFn(createThread);
-  const removeThread = useServerFn(deleteThread);
   const send = useServerFn(sendMessage);
   const transcribe = useServerFn(transcribeVoiceNote);
 
@@ -202,7 +197,11 @@ function ChatPage() {
     }
   }, [profileData, navigate]);
 
-  const { data: threads } = useQuery({ queryKey: ["chat-threads"], queryFn: () => fetchThreads() });
+  // One continuous conversation per member — no thread list, no "new chat".
+  const { data: primaryThread } = useQuery({
+    queryKey: ["chat-threads"],
+    queryFn: () => fetchPrimary(),
+  });
 
   const { data: history } = useQuery({
     queryKey: ["chat-thread", threadId],
@@ -211,12 +210,11 @@ function ChatPage() {
   });
 
   useEffect(() => {
-    const first = threads?.[0];
-    if (!threadId && first) setThreadId(first.id);
-  }, [threadId, threads]);
+    if (!threadId && primaryThread) setThreadId(primaryThread.id);
+  }, [threadId, primaryThread]);
 
   const messages = history?.messages ?? [];
-  const activeThread = (threads ?? []).find((thread) => thread.id === threadId);
+  const activeThread = primaryThread;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -237,7 +235,12 @@ function ChatPage() {
       setInput("");
     },
     onSuccess: async (result) => {
-      setActions(result.reply.type === "message" ? result.reply.actions : []);
+      const nextActions = result.reply.type === "message" ? result.reply.actions : [];
+      setActions(nextActions);
+      if (nextActions.some((action) => action.type === "human_support_requested")) {
+        await queryClient.invalidateQueries({ queryKey: ["my-human-support"] });
+        setViewMode("support");
+      }
       setDailyLimit(
         result.reply.type === "message" && result.reply.limit?.reason === "daily"
           ? { tier: result.reply.limit.tier, resetsAt: result.reply.limit.resetsAt }
@@ -269,25 +272,6 @@ function ChatPage() {
 
   const recorder = useVoiceRecorder((audio, mime) => voice.mutate({ audio, mime }));
 
-  const start = useMutation({
-    mutationFn: () => newThread(),
-    onSuccess: async (thread) => {
-      setThreadId(thread.id);
-      setActions([]);
-      setDailyLimit(null);
-      await queryClient.invalidateQueries({ queryKey: ["chat-threads"] });
-    },
-  });
-
-  const drop = useMutation({
-    mutationFn: (id: string) => removeThread({ data: { thread_id: id } }),
-    onSuccess: async () => {
-      setThreadId(null);
-      await queryClient.invalidateQueries({ queryKey: ["chat-threads"] });
-      toast.success(t("chat.conversationDeleted"));
-    },
-  });
-
   function submit(text: string) {
     const value = text.trim();
     if (!value || mutation.isPending || dailyLimit) return;
@@ -304,39 +288,6 @@ function ChatPage() {
       <AppSidebar
         open={sidebarOpen}
         onToggle={() => setSidebarOpen((open) => !open)}
-        onNewChat={() => start.mutate()}
-        newChatDisabled={start.isPending}
-        recents={
-          <ul className="space-y-0.5">
-            {(threads ?? []).map((thread) => (
-              <li key={thread.id} className="group flex items-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setThreadId(thread.id);
-                    setActions([]);
-                    setDailyLimit(null);
-                  }}
-                  className={`flex-1 truncate rounded-lg px-2.5 py-2 text-left text-sm transition-colors ${
-                    threadId === thread.id
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                  }`}
-                >
-                  {thread.title}
-                </button>
-                <button
-                  type="button"
-                  aria-label={t("chat.deleteConversation")}
-                  onClick={() => drop.mutate(thread.id)}
-                  className="rounded-lg p-1.5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
-                >
-                  <Trash2 className="size-3.5" aria-hidden />
-                </button>
-              </li>
-            ))}
-          </ul>
-        }
       />
 
       {viewMode === "support" ? (
@@ -448,9 +399,16 @@ function ChatPage() {
                 </div>
               ) : message.content_type === "rate_limit" ? (
                 <div key={message.id} className="mx-auto w-fit max-w-[85%] text-center">
-                  <p className="text-sm leading-relaxed text-muted-foreground">
-                    {message.content}
-                  </p>
+                  <div className="space-y-3 rounded-2xl border border-primary/25 bg-primary/5 p-4">
+                    <p className="text-sm leading-relaxed">{t("chat.limitCoachMessage")}</p>
+                    <Link
+                      to="/plans"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground"
+                    >
+                      {t("chat.upgradeCta")}
+                    </Link>
+                    <p className="text-xs text-muted-foreground">{t("chat.limitStillHere")}</p>
+                  </div>
                 </div>
               ) : message.sender === "system" ? (
                 <div key={message.id} className="space-y-3">

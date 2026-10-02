@@ -27,6 +27,23 @@ const COOLDOWN_HOURS = 20;
 const LOOKBACK_DAYS = 14;
 const SCAN_LIMIT = 300;
 
+const MAX_UNANSWERED = 3;
+
+function isQuietHour(timezone: string | null | undefined): boolean {
+  try {
+    const hour = Number(
+      new Intl.DateTimeFormat("en-GB", {
+        hour: "numeric",
+        hour12: false,
+        timeZone: timezone || "UTC",
+      }).format(new Date()),
+    );
+    return hour >= 22 || hour < 8;
+  } catch {
+    return false;
+  }
+}
+
 function hoursAgoIso(hours: number): string {
   return new Date(Date.now() - hours * 3600_000).toISOString();
 }
@@ -36,8 +53,10 @@ function hoursAgoIso(hours: number): string {
 // stays behind a flag until a human decides to roll it out, and is a runtime
 // kill switch afterwards. Set CHAT_CHECKIN_ENABLED=true|1|yes to turn it on.
 function isEnabled(): boolean {
+  // ON by default — the coach reaching out is core to the product now.
+  // Set CHAT_CHECKIN_ENABLED=false|0|no as a kill switch.
   const raw = (process.env["CHAT_CHECKIN_ENABLED"] ?? "").toLowerCase();
-  return raw === "1" || raw === "true" || raw === "yes";
+  return !(raw === "0" || raw === "false" || raw === "no");
 }
 
 /**
@@ -97,7 +116,7 @@ async function sendChatCheckinIfDue(
   const [profile, intro, cooldown, lastUserMessage] = await Promise.all([
     supabase
       .from("profiles")
-      .select("preferred_name, account_type, onboarding_completed, ai_context_consent")
+      .select("preferred_name, account_type, onboarding_completed, ai_context_consent, timezone")
       .eq("id", userId)
       .maybeSingle(),
     supabase.from("user_profiles").select("goals, stressors").eq("user_id", userId).maybeSingle(),
@@ -125,12 +144,36 @@ async function sendChatCheckinIfDue(
   if (cooldown.data) return false;
   if (!lastUserMessage.data) return false;
 
+  // Quiet hours in their own timezone — never knock overnight.
+  if (isQuietHour(profile.data.timezone)) return false;
+
+  // Stop after 3 unanswered check-ins until they come back.
+  const lastUser = await supabase
+    .from("chat_messages")
+    .select("content, created_at")
+    .eq("thread_id", threadId)
+    .eq("sender", "user")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const unanswered = await supabase
+    .from("nudges")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("trigger_type", "chat_checkin_12h")
+    .gt("created_at", lastUser.data?.created_at ?? "1970-01-01T00:00:00Z");
+  if ((unanswered.count ?? 0) >= MAX_UNANSWERED) return false;
+  const lastTopic = (lastUser.data?.content ?? "").slice(0, 300);
+
   // ai_context_consent is confirmed not-false by the guard above.
   const message = await generateReaction(
     [
       "It's been about half a day of quiet since they last messaged you, after a real conversation.",
       "Reach out FIRST, like you would with someone you check in on — warm, low-key, genuinely curious how they're doing right now.",
-      "One open question about how they're feeling. Do not reference a 'streak', a gap, being 'away', or anything that could read as tracking them. Do not repeat anything you already said before.",
+      lastTopic
+        ? `The last thing they said to you was: "${lastTopic}". You may gently pick that thread back up if it fits.`
+        : "",
+      "You are their mental-health coach. One open question about how they're feeling or how that thing went. Do not reference a 'streak', a gap, being 'away', or anything that could read as tracking them. Do not repeat anything you already said before.",
     ].join(" "),
     {
       preferredName: profile.data.preferred_name,

@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS chat_threads_one_per_user ON public.chat_threads (user_id);

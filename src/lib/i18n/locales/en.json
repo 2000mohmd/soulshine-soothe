@@ -117,7 +117,9 @@
     "stopRecording": "Stop recording",
     "recordVoice": "Record a voice message",
     "sendMessage": "Send message",
-    "disclaimer": "Kalm is an AI companion, not a therapist. In a crisis, use immediate support."
+    "disclaimer": "Kalm is an AI companion, not a therapist. In a crisis, use immediate support.",
+    "limitCoachMessage": "We've reached today's message limit on your plan. Upgrade so we can keep going together — I'd love to continue this with you.",
+    "limitStillHere": "Crisis help and human coaches are always available, and I'll be right here again tomorrow."
   },
   "quickActions": {
     "anxious": "I'm feeling anxious",

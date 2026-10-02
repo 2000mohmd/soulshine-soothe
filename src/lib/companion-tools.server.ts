@@ -30,7 +30,8 @@ export type CompanionAction =
       crisis: boolean;
       summary: string;
     }
-  | { type: "stepup_suggested"; summary: string };
+  | { type: "stepup_suggested"; summary: string }
+  | { type: "human_support_requested"; request_id: string; summary: string };
 
 export type ToolContext = {
   supabase: Client;
@@ -187,6 +188,20 @@ const SUBMIT_SCREENER_IN_CHAT: AnthropicTool = {
   },
 };
 
+const REQUEST_HUMAN_SUPPORT: AnthropicTool = {
+  name: "request_human_support",
+  description:
+    "Ask a real human mental-health coach from the Kalm team to join this conversation. Use when the person asks for a real person/human/therapist/coach, or clearly needs more help than you can give. Creates a request with a summary; their replies then go to the human coach in the app.",
+  input_schema: {
+    type: "object",
+    properties: {
+      note: { type: "string", description: "One short line, in their words, of what they need help with." },
+      urgent: { type: "boolean", description: "True if they seem in acute distress." },
+    },
+    required: [],
+  },
+};
+
 /** Full conversational tool set. */
 export const CHAT_TOOLS: AnthropicTool[] = [
   LOG_MOOD,
@@ -200,6 +215,7 @@ export const CHAT_TOOLS: AnthropicTool[] = [
   SUBMIT_SCREENER_IN_CHAT,
   LAUNCH_EXERCISE,
   SUGGEST_STEPUP,
+  REQUEST_HUMAN_SUPPORT,
 ];
 
 /** Nudges are one-shot generations: read-only tools only. */
@@ -576,6 +592,31 @@ export async function runCompanionTool(
         summary: "Shared some options for more support.",
       },
     };
+  }
+
+  if (name === "request_human_support") {
+    try {
+      const { requestHumanSupportCore } = await import("./human-handoff.functions");
+      const note = typeof input["note"] === "string" ? input["note"].slice(0, 500) : null;
+      const created = await requestHumanSupportCore(supabase, userId, {
+        thread_id: ctx.threadId,
+        note,
+        severity: input["urgent"] === true ? "high" : null,
+      });
+      return {
+        result: created.already_open
+          ? "A human coach request was already open; their note was added. Tell them warmly a human coach will reply right here in the app."
+          : "A human coach request was created. Tell them warmly, in one or two sentences, that a human coach from the team has been asked to join and their replies will appear right here. Do not promise an exact time.",
+        action: {
+          type: "human_support_requested",
+          request_id: created.request_id,
+          summary: "Asked a human coach to join you.",
+        },
+      };
+    } catch (error) {
+      console.error("request_human_support failed", error);
+      return { result: "Could not reach the human team right now. Point them to the 'Connect to a human' button and the crisis lines if they feel unsafe." };
+    }
   }
 
   return { result: `Unknown tool: ${name}` };

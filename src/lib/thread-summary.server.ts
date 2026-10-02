@@ -146,9 +146,8 @@ export async function fetchRecentSummaries(
     .from("thread_summaries")
     .select("summary_text, created_at, open_commitment_ids, thread_id")
     .eq("user_id", userId)
-    .neq("thread_id", currentThreadId)
     .order("created_at", { ascending: false })
-    .limit(limit);
+    .limit(Math.max(limit, 3));
 
   const rows = data ?? [];
   if (rows.length === 0) return [];
@@ -190,4 +189,82 @@ export async function fetchRecentSummaries(
       commitmentNote,
     };
   });
+}
+
+const ROLLING_KEEP_RECENT = 30; // these stay verbatim in the prompt
+const ROLLING_MIN_BATCH = 30; // summarize once this many older messages pile up
+
+/**
+ * Rolling long-term memory for the single ongoing conversation: messages that
+ * have scrolled out of the verbatim window are condensed into a new
+ * thread_summaries row, so nothing is forgotten as the conversation grows.
+ * Fail-open; never blocks a reply.
+ */
+export async function ensureRollingSummary(
+  supabase: Client,
+  userId: string,
+  threadId: string,
+): Promise<void> {
+  const last = await supabase
+    .from("thread_summaries")
+    .select("created_at")
+    .eq("thread_id", threadId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const since = last.data?.created_at ?? "1970-01-01T00:00:00Z";
+
+  const recent = await supabase
+    .from("chat_messages")
+    .select("created_at")
+    .eq("thread_id", threadId)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .range(ROLLING_KEEP_RECENT - 1, ROLLING_KEEP_RECENT - 1);
+  const cutoff = recent.data?.[0]?.created_at;
+  if (!cutoff) return;
+
+  const older = await supabase
+    .from("chat_messages")
+    .select("sender, content")
+    .eq("thread_id", threadId)
+    .eq("user_id", userId)
+    .gt("created_at", since)
+    .lt("created_at", cutoff)
+    .neq("sender", "system")
+    .order("created_at", { ascending: true })
+    .limit(80);
+  const transcript = older.data ?? [];
+  if (transcript.length < ROLLING_MIN_BATCH) return;
+
+  try {
+    const payload = await callCompanionModel({
+      model: SUMMARY_MODEL,
+      maxTokens: SUMMARY_MAX_TOKENS,
+      system: SUMMARY_SYSTEM,
+      messages: [
+        {
+          role: "user",
+          content: `Conversation transcript:\n${transcript
+            .map((e) => `${e.sender === "assistant" ? "Companion" : "Person"}: ${e.content}`)
+            .join("\n")}`,
+        },
+      ],
+    });
+    const text = payload.content
+      .filter((b): b is { type: "text"; text: string } => b.type === "text")
+      .map((b) => b.text)
+      .join("\n")
+      .trim();
+    if (!text) return;
+    const { error } = await supabase.from("thread_summaries").insert({
+      user_id: userId,
+      thread_id: threadId,
+      summary_text: text.slice(0, 2000),
+      open_commitment_ids: null,
+    });
+    if (error) console.error("rolling summary insert failed", error);
+  } catch (error) {
+    console.error("rolling summary failed", error);
+  }
 }

@@ -18,3 +18,5 @@
 - [ ] Stripe Customer Portal: allow switching across the four prices with proration (dashboard config, user action)
 - [ ] Native review of French/Arabic clinical + safety copy
 
+- [x] Continuous virtual coach (single conversation, check-ins, coaching style, upgrade card, human handoff)
+- [ ] Email fallback for coach check-ins
