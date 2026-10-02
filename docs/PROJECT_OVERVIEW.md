@@ -159,6 +159,7 @@ Not built yet:
   same time.
 
 Recently built (was on this list):
+- Continuous virtual coach: one ongoing conversation per member (older conversations merged; one-thread-per-member enforced), rolling long-term memory summaries, coach-style replies that always move forward with one question, proactive check-ins ON by default (12h quiet, max 1/day, stops after 3 unanswered, no 22:00–08:00 local), companion tool that hands off to a human coach and switches chat to human support, and a coach-voiced daily-limit card with an upgrade button. Email fallback for check-ins is not built yet (in-app + push only).
 
 - **Personal safety plan** — `safety_plans` (owner-only RLS) +
   `src/lib/safety-plan.functions.ts`, edited in `src/components/SafetyPlanPanel.tsx`,
@@ -238,6 +239,8 @@ Recently built (was on this list):
 
 
 ## 7. Known risks / review areas for an outside reviewer
+
+- `chat-messages-ordering.test.ts` expects high/moderate crisis messages to get a fixed crisis reply, but the gate currently only short-circuits critical severity; the test and the gate need reconciling by a human safety reviewer.
 
 1. Crisis detection is **two-tier** (`src/lib/crisis-gate.server.ts` → `runCrisisGate`):
    a deterministic regex gate (`triageCrisis`, tiered critical/high/moderate severity,

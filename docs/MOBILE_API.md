@@ -136,7 +136,7 @@ an expired or revoked token is rejected, not just a malformed one.
 |---|---|---|---|
 | POST | `/api/v1/chat/messages` | yes | send a message — crisis-gated, rate-limited |
 | POST | `/api/v1/chat/messages/stream` | yes | same, as a server-sent-events stream |
-| GET | `/api/v1/chat/threads` | yes | list the caller's threads |
+| GET | `/api/v1/chat/threads` | yes | the caller's single ongoing conversation (always one item) |
 | GET | `/api/v1/chat/threads/:id/messages` | yes | paginated message history (preferred) |
 | GET | `/api/v1/chat/history?thread_id=` | yes | older, non-paginated history read (superseded) |
 | GET | `/api/v1/crisis-resources` | **no** | localized crisis resource list |
