@@ -13,7 +13,7 @@ export function SafetyFooter() {
       <p className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-2 gap-y-1">
         <AlertTriangle className="size-4 shrink-0" aria-hidden />
         <span>{t("safety.disclaimer")}</span>
-        <Link to="/crisis" className="font-semibold text-primary underline underline-offset-4">
+        <Link to="/chat" search={{ support: true }} className="font-semibold text-primary underline underline-offset-4">
           {t("safety.getCrisisSupport")}
         </Link>
       </p>
