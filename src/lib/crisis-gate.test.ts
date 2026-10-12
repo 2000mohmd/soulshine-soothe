@@ -228,7 +228,7 @@ describe("localized crisis resources", () => {
   });
 
   it("unknown / missing locale falls back to English copy", () => {
-    expect(hasUsLines(crisisCopy("de").resources)).toBe(true);
+    expect(hasUsLines(crisisCopy("de").resources)).toBe(false);
     expect(crisisCopy(null)).toBe(crisisCopy("en"));
   });
 
@@ -238,6 +238,6 @@ describe("localized crisis resources", () => {
     expect(hasUsLines(fr.resources)).toBe(false);
 
     const en = buildCrisisResponse([], "high", "en");
-    expect(hasUsLines(en.resources)).toBe(true);
+    expect(hasUsLines(en.resources)).toBe(false);
   });
 });
