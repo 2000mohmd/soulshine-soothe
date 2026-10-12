@@ -207,8 +207,11 @@ describe("semantic classifier fail-safe", () => {
 });
 
 describe("localized crisis resources", () => {
-  it("en still leads with the US lines", () => {
-    expect(hasUsLines(crisisCopy("en").resources)).toBe(true);
+  it("en drops the US lines and leads with emergency + findahelpline", () => {
+    const r = crisisCopy("en").resources;
+    expect(hasUsLines(r)).toBe(false);
+    expect(r[0]?.contact.toLowerCase()).toContain("emergency");
+    expect(r.some((x) => x.contact.toLowerCase().includes("findahelpline.com"))).toBe(true);
   });
 
   it("fr drops the US lines and carries 3114 + findahelpline", () => {
