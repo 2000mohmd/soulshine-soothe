@@ -27,6 +27,12 @@ test.describe("GET /api/v1/crisis-resources — never gated", () => {
   });
 });
 
+test("GET /api/v1/personas is public and lists personas", async ({ request }) => {
+  const res = await request.get("/api/v1/personas");
+  expect(res.status()).toBe(200);
+  expect(await res.json()).toBeTruthy();
+});
+
 test.describe("v1 endpoints require a bearer token", () => {
   const cases: { method: "get" | "post"; path: string }[] = [
     { method: "post", path: "/api/v1/chat/messages" },

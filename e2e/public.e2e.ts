@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 test.describe("public pages", () => {
   test("landing page renders and links to auth", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveTitle(/kalm/i);
+    await expect(page).toHaveTitle(/calm ai|kalm/i);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     const authLink = page.getByRole("link", { name: /sign in|get started|create/i }).first();
     await expect(authLink).toBeVisible();
@@ -14,14 +14,18 @@ test.describe("public pages", () => {
     await expect(page).toHaveURL(/\/auth/);
   });
 
-  test("auth page has email/password + Google & Apple OAuth", async ({ page }) => {
+  test("auth page is magic-link + Google & Apple, no password", async ({ page }) => {
     await page.goto("/auth");
     await expect(page.locator('input[type="email"]')).toBeVisible();
-    await expect(page.locator('input[type="password"]')).toBeVisible();
+    await expect(page.getByRole("button", { name: /sign-in link/i })).toBeVisible();
+    await expect(page.locator('input[type="password"]')).toHaveCount(0);
     await expect(page.getByRole("button", { name: /google/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /apple/i })).toBeVisible();
-    // sign-in / sign-up toggle exists
-    await expect(page.getByRole("button", { name: /sign|create|account/i }).first()).toBeVisible();
+  });
+
+  test("unknown routes show the 404 page", async ({ page }) => {
+    await page.goto("/definitely-not-a-page");
+    await expect(page.getByRole("heading", { name: "404" })).toBeVisible();
   });
 
   test("crisis resources page is reachable and NOT gated by auth", async ({ page }) => {
