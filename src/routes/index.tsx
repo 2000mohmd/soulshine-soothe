@@ -1647,7 +1647,7 @@ function Index() {
                     letterSpacing: "-.5px",
                   }}
                 >
-                  Text HOME to 741741
+                  Talk to a human coach
                 </div>
                 <div
                   style={{
@@ -1657,7 +1657,7 @@ function Index() {
                     color: "#7a5f57",
                   }}
                 >
-                  Crisis Text Line · a trained counsellor
+                  Request support right in the app
                 </div>
               </div>
               <div
@@ -2790,7 +2790,7 @@ function Index() {
                 CALMAI.SITE · © 2026
               </span>
               <span style={{ fontSize: "13px", color: "#9ea1e6" }}>
-                In crisis? Call or text 988 (US)
+                In crisis? Call your local emergency number
               </span>
             </div>
           </div>

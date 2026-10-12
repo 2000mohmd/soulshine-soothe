@@ -161,18 +161,8 @@ const TIERS: { severity: CrisisSeverity; patterns: RegExp[] }[] = [
 
 export const CRISIS_RESOURCES: CrisisResource[] = [
   {
-    name: "988 Suicide & Crisis Lifeline (US)",
-    contact: "Call or text 988",
-    detail: "Free, confidential support 24/7.",
-  },
-  {
-    name: "Crisis Text Line",
-    contact: "Text HOME to 741741",
-    detail: "Text with a trained crisis counselor, 24/7.",
-  },
-  {
     name: "Emergency services",
-    contact: "Call 911 (or your local emergency number)",
+    contact: "Call your local emergency number",
     detail: "If you are in immediate danger, please get help right now.",
   },
   {
@@ -201,12 +191,11 @@ const EN_COPY: CrisisCopy = {
 /**
  * Localized crisis copy. DRAFT — pending clinician review for ar/fr.
  *
- * Only `en` lists the US lines (988 / Crisis Text Line 741741) — they do not
- * work from outside the US and must not be shown as the primary option to a
- * non-US user. For `ar` and `fr` the list leads with findahelpline.com (which
- * routes by country) and the local emergency number; `fr` also carries 3114,
- * France's national suicide-prevention line. Adding more country-specific lines
- * here is welcome — but only real, verified numbers.
+ * The app does not operate in the US, so no locale lists US lines (988 /
+ * Crisis Text Line 741741). Every locale leads with the local emergency
+ * number and findahelpline.com (which routes by country); `fr` also carries
+ * 3114, France's national suicide-prevention line. Adding more
+ * country-specific lines here is welcome — but only real, verified numbers.
  */
 const CRISIS_COPY: Record<string, CrisisCopy> = {
   en: EN_COPY,

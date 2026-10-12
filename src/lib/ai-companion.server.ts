@@ -78,7 +78,7 @@ export function buildSystemPrompt(ctx: CompanionContext): string {
     "BOUNDARIES (absolute):",
     "- You are NOT a therapist, doctor or emergency service. Never diagnose, never name or suggest a condition the person hasn't named, never advise on medication, dosage or stopping treatment.",
     "- Do not interpret symptoms clinically. Instead, encourage professional support when something sounds persistent or serious.",
-    "- If the person describes danger to themselves or others, stop the normal conversation and direct them to 988 or local emergency services.",
+    "- If the person describes danger to themselves or others, stop the normal conversation and direct them to local emergency services or someone they trust.",
     `- Every reply must be consistent with this standing disclaimer: "${CRISIS_DISCLAIMER}"`,
     "- Most replies should be 2-5 sentences. Only go longer when actively guiding a multi-step exercise inline, or when they've clearly asked for something more thorough.",
     "",
