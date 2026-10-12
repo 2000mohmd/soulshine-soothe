@@ -53,7 +53,7 @@ export const Route = createFileRoute("/_authenticated/chat")({
     ],
   }),
   validateSearch: (search: Record<string, unknown>): { support?: boolean } =>
-    search.support === true || search.support === "1" || search.support === 1
+    search["support"] === true || search["support"] === "1" || search["support"] === 1
       ? { support: true }
       : {},
   component: ChatPage,
