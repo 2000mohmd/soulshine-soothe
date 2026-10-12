@@ -1616,7 +1616,7 @@ function Index() {
                     letterSpacing: "-.5px",
                   }}
                 >
-                  Call or text 988
+                  Local emergency services
                 </div>
                 <div
                   style={{
@@ -1626,7 +1626,7 @@ function Index() {
                     color: "#7a5f57",
                   }}
                 >
-                  Suicide &amp; Crisis Lifeline (US) · 24/7
+                  Call the emergency number in your country · 24/7
                 </div>
               </div>
               <div
