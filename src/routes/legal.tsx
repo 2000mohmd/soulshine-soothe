@@ -61,7 +61,7 @@ function LegalPage() {
         </div>
         <p className="mt-12 text-sm text-muted-foreground">
           {t("legal.questionsData")}{" "}
-          <Link to="/crisis" className="font-semibold text-primary underline underline-offset-4">
+          <Link to="/chat" search={{ support: true }} className="font-semibold text-primary underline underline-offset-4">
             {t("landing.crisisResources")}
           </Link>
         </p>

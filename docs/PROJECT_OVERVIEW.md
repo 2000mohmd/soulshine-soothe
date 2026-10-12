@@ -30,7 +30,7 @@ a separate mobile app is intended to consume the same backend later.
 
 ## 3. Routes
 
-Public: `/` (landing), `/auth`, `/crisis` (never gated), `/legal`.
+Public: `/` (landing), `/auth`, `/crisis` (now redirects to the in-chat human support view, `/chat?support=1`; crisis numbers still shown in chat), `/legal`.
 
 Authenticated (`src/routes/_authenticated/`, guarded by `route.tsx`):
 

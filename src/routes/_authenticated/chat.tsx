@@ -52,6 +52,10 @@ export const Route = createFileRoute("/_authenticated/chat")({
       },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): { support?: boolean } =>
+    search["support"] === true || search["support"] === "1" || search["support"] === 1
+      ? { support: true }
+      : {},
   component: ChatPage,
 });
 
@@ -180,7 +184,9 @@ function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [callOpen, setCallOpen] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"ai" | "support">("ai");
+  const [viewMode, setViewMode] = useState<"ai" | "support">(
+    Route.useSearch().support ? "support" : "ai",
+  );
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
