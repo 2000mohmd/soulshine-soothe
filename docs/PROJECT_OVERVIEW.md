@@ -79,7 +79,7 @@ Flow for a chat message (`src/lib/chat.functions.ts` → `sendMessage`):
 user message
   └─> detectCrisis()  (regex, src/lib/crisis.ts)   ← NON-NEGOTIABLE, runs first
         ├─ flagged: mark flagged_crisis, log crisis_events, return crisis response
-        │           object (calm copy + 988 / Crisis Text Line resources). No LLM call.
+        │           object (calm copy + local-emergency / findahelpline.com resources). No LLM call.
         └─ clear:  generateCompanionReply()  (src/lib/ai-companion.server.ts)
                      ├─ buildSystemPrompt(ctx)  — persona, session behavior,
                      │    anti-dependency instruction, disclaimer
@@ -217,7 +217,7 @@ Recently built (was on this list):
   `complete_commitment` companion tool; open commitments flow into the chat
   context.
 - **Localization** — member-facing screens are EN/AR/FR; crisis resources are
-  localized (`crisisCopy()` — AR/FR drop US-only lines); `care_resources.region`
+  localized (`crisisCopy()` — no locale lists US-only lines; the app is not US-operated); `care_resources.region`
   is now filtered (see "Precise region signal" above). Public language changes
   remain local until sign-in, avoiding protected profile requests without a session.
 - **Mobile API** — versioned HTTP surface under `src/routes/api/v1/*` with a

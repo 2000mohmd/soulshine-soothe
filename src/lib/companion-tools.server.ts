@@ -548,7 +548,7 @@ export async function runCompanionTool(
 
     return {
       result: saved.crisisTriggered
-        ? `${base}\n\nIMPORTANT: their answer to the self-harm item was above zero. The app is showing crisis resources alongside your reply. Respond with care, name it directly and gently, encourage them to reach out to 988 or local emergency services or someone they trust right now, and do not move on to other topics.`
+        ? `${base}\n\nIMPORTANT: their answer to the self-harm item was above zero. The app is showing crisis resources alongside your reply. Respond with care, name it directly and gently, encourage them to reach out to local emergency services or someone they trust right now, and do not move on to other topics.`
         : base,
       action: {
         type: "screener_completed",

@@ -207,8 +207,11 @@ describe("semantic classifier fail-safe", () => {
 });
 
 describe("localized crisis resources", () => {
-  it("en still leads with the US lines", () => {
-    expect(hasUsLines(crisisCopy("en").resources)).toBe(true);
+  it("en drops the US lines and leads with emergency + findahelpline", () => {
+    const r = crisisCopy("en").resources;
+    expect(hasUsLines(r)).toBe(false);
+    expect(r[0]?.contact.toLowerCase()).toContain("emergency");
+    expect(r.some((x) => x.contact.toLowerCase().includes("findahelpline.com"))).toBe(true);
   });
 
   it("fr drops the US lines and carries 3114 + findahelpline", () => {
@@ -225,7 +228,7 @@ describe("localized crisis resources", () => {
   });
 
   it("unknown / missing locale falls back to English copy", () => {
-    expect(hasUsLines(crisisCopy("de").resources)).toBe(true);
+    expect(hasUsLines(crisisCopy("de").resources)).toBe(false);
     expect(crisisCopy(null)).toBe(crisisCopy("en"));
   });
 
@@ -235,6 +238,6 @@ describe("localized crisis resources", () => {
     expect(hasUsLines(fr.resources)).toBe(false);
 
     const en = buildCrisisResponse([], "high", "en");
-    expect(hasUsLines(en.resources)).toBe(true);
+    expect(hasUsLines(en.resources)).toBe(false);
   });
 });
