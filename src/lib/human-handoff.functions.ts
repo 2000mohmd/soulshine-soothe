@@ -9,6 +9,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { humanCoachAllowed } from "./chat-limits";
+
+/** Thrown for a new request without a paid (post-trial) plan. The API maps it to 402. */
+export const COACH_PAID_ONLY =
+  "Payment required: human coaches are part of Pro and Premium, after the free trial.";
 
 export type HumanSupportMessage = {
   id: string;
@@ -50,7 +55,7 @@ export async function requestHumanSupportCore(
 
     const profile = await supabase
       .from("profiles")
-      .select("preferred_name, language, timezone")
+      .select("preferred_name, language, timezone, subscription_tier, stripe_subscription_status")
       .eq("id", userId)
       .maybeSingle();
 
@@ -64,6 +69,12 @@ export async function requestHumanSupportCore(
         });
       }
       return { request_id: open.data.id, already_open: true, status: open.data.status };
+    }
+
+    // New requests reach a paid coach: paid plans only, not during the trial.
+    // An already-open conversation (above) is never cut off.
+    if (!humanCoachAllowed(profile.data?.subscription_tier, profile.data?.stripe_subscription_status)) {
+      throw new Error(COACH_PAID_ONLY);
     }
 
     // The most recent safety flag, if any — it tells the reviewer how urgent
@@ -166,17 +177,31 @@ export const requestHumanSupport = createServerFn({ method: "POST" })
 /** The member's current (or most recent) request plus its messages. */
 export const getMyHumanSupport = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<{ request: MyHumanSupportRequest | null }> => {
+  .handler(
+    async ({ context }): Promise<{ request: MyHumanSupportRequest | null; coach_available: boolean }> => {
     const { supabase, userId } = context;
-    const { data, error } = await supabase
-      .from("human_support_requests")
-      .select("id, status, severity, created_at, claimed_at, closed_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const [latest, plan] = await Promise.all([
+      supabase
+        .from("human_support_requests")
+        .select("id, status, severity, created_at, claimed_at, closed_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("subscription_tier, stripe_subscription_status")
+        .eq("id", userId)
+        .maybeSingle(),
+    ]);
+    const { data, error } = latest;
     if (error) throw error;
-    if (!data) return { request: null };
+    // Whether a NEW request may be opened (an open one can always be continued).
+    const coach_available = humanCoachAllowed(
+      plan.data?.subscription_tier,
+      plan.data?.stripe_subscription_status,
+    );
+    if (!data) return { request: null, coach_available };
 
     const messages = await supabase
       .from("human_support_messages")
@@ -200,6 +225,7 @@ export const getMyHumanSupport = createServerFn({ method: "GET" })
           created_at: row.created_at,
         })),
       },
+      coach_available,
     };
   });
 

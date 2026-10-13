@@ -74,6 +74,9 @@ export async function handle(fn: () => Promise<Response>): Promise<Response> {
     if (/not found$/i.test(message)) {
       return json({ error: message }, 404);
     }
+    if (/^payment required/i.test(message)) {
+      return json({ error: message }, 402);
+    }
     if (/not implemented/i.test(message)) {
       return json({ error: message }, 501);
     }

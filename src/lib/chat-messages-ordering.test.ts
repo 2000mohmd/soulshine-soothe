@@ -17,7 +17,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const h = vi.hoisted(() => {
   const touched: string[] = [];
   // Set when the gate marks the saved message flagged_crisis (semantic path).
-  const state = { flaggedRow: false };
+  const state = { flaggedRow: false, userMessageCount: 0 };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- self-referential test stub
   const chain: any = {
     insert: () => chain,
@@ -49,6 +49,10 @@ const h = vi.hoisted(() => {
       error: null,
     }),
     then: undefined,
+    // `{ count }` of a head-count query (the free first-conversation check).
+    get count() {
+      return state.userMessageCount;
+    },
   };
   const fake = {
     touched,
@@ -104,6 +108,7 @@ const post = (content: string) =>
 beforeEach(() => {
   h.touched.length = 0;
   h.state.flaggedRow = false;
+  h.state.userMessageCount = 0;
   classify.mockResolvedValue({ flagged: false, severity: null, reason: null });
 });
 
@@ -132,6 +137,28 @@ describe("POST /api/v1/chat/messages — crisis messages never reach the rate li
       expect(h.touched).not.toContain("chat_rate_limits");
     });
   }
+
+  it("free member past their first conversation: offered the trial, not answered", async () => {
+    h.state.userMessageCount = 16; // FREE_INTRO_MESSAGE_CAP is 15
+    const res = await post("can we keep talking about my week?");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.reply.type).toBe("message");
+    expect(body.reply.limit).toEqual({
+      reason: "intro",
+      tier: "free",
+      introLimit: 15,
+      trialDays: 3,
+    });
+    expect(h.touched).not.toContain("chat_rate_limits");
+  });
+
+  it("free member past their first conversation still gets through with a crisis message", async () => {
+    h.state.userMessageCount = 16;
+    const body = await (await post("I want to kill myself")).json();
+    expect(body.reply.type).toBe("message");
+    expect(body.reply.limit).toBeUndefined();
+  });
 
   it("flagged only by the semantic classifier: rate limiter untouched", async () => {
     classify.mockResolvedValue({ flagged: true, severity: "moderate", reason: "test" });

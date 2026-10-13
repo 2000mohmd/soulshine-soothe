@@ -3,8 +3,13 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { triageCrisis, type CrisisResponse } from "./crisis";
 import { QUICK_ACTION_IDS } from "./quick-actions";
-import { getRateLimiter, RATE_LIMIT_MESSAGE } from "./rate-limit";
-import { dailyMessageCap } from "./chat-limits";
+import { getRateLimiter, RATE_LIMIT_MESSAGE, type RateLimitDecision } from "./rate-limit";
+import {
+  FREE_INTRO_MESSAGE_CAP,
+  TRIAL_DAYS,
+  dailyMessageCap,
+  isUnlimitedishTier,
+} from "./chat-limits";
 import type { CompanionAction } from "./companion-tools.server";
 import type { CompanionContext, CompanionReply } from "./ai-companion.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -15,6 +20,9 @@ const HISTORY_LIMIT = 20;
 /** Shown to a teen whose guardian hasn't approved the account yet. */
 const GUARDIAN_HOLD_MESSAGE =
   "Thanks for writing. Before we can talk properly, a parent or guardian needs to give permission — we've sent them an email, and you can resend it from the note at the top of this screen. If you ever feel unsafe, the help lines are always available to you here, permission or not.";
+
+/** Shown when a free member's first conversation is used up. */
+const INTRO_LIMIT_MESSAGE = `I've really valued getting to know you. To keep going together, start your ${TRIAL_DAYS}-day free trial — you won't be charged during it, and you can cancel any time. If you ever feel unsafe, the help lines are always here for you, plan or not.`;
 
 const SendInput = z.object({
   thread_id: z.string().uuid().optional(),
@@ -209,7 +217,10 @@ export type SendMessageResult = {
          * enforced daily cap and the reset time so a mobile client can render an
          * upgrade prompt without a second call to /api/v1/entitlements.
          */
-        limit?: { reason: "daily" | "window"; tier: string; dailyLimit: number; resetsAt: string };
+        limit?:
+          | { reason: "daily" | "window"; tier: string; dailyLimit: number; resetsAt: string }
+          // A free member's first conversation is used up: offer the trial.
+          | { reason: "intro"; tier: string; introLimit: number; trialDays: number };
       }
     | (CrisisResponse & { id: string; created_at: string });
 };
@@ -389,13 +400,28 @@ async function prepareChatTurn(
         .maybeSingle()
     ).data?.flagged_crisis === true;
   const tier = profileLang.data?.subscription_tier ?? "free";
+
+  // Free tier: one first conversation (FREE_INTRO_MESSAGE_CAP messages over
+  // their whole history, this one included), then the trial. No daily refill.
+  let introUsedUp = false;
+  if (!flagged && !isUnlimitedishTier(tier)) {
+    const { count } = await supabase
+      .from("chat_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("sender", "user");
+    introUsedUp = (count ?? 0) > FREE_INTRO_MESSAGE_CAP;
+  }
+
   const rateLimiter = getRateLimiter(supabase);
-  const decision = flagged
-    ? ({ allowed: true } as const)
-    : await rateLimiter.checkAndConsume(userId, {
-        tier,
-        dailyCap: dailyMessageCap(tier),
-      });
+  const decision: RateLimitDecision = flagged
+    ? { allowed: true }
+    : introUsedUp
+      ? { allowed: false, reason: "intro", message: INTRO_LIMIT_MESSAGE }
+      : await rateLimiter.checkAndConsume(userId, {
+          tier,
+          dailyCap: dailyMessageCap(tier),
+        });
   if (!decision.allowed) {
     const savedLimit = await supabase
       .from("chat_messages")
@@ -423,7 +449,16 @@ async function prepareChatTurn(
           actions: [],
           ...(decision.reason === "daily" && decision.limit
             ? { limit: { reason: "daily" as const, ...decision.limit } }
-            : {}),
+            : decision.reason === "intro"
+              ? {
+                  limit: {
+                    reason: "intro" as const,
+                    tier,
+                    introLimit: FREE_INTRO_MESSAGE_CAP,
+                    trialDays: TRIAL_DAYS,
+                  },
+                }
+              : {}),
         },
       },
     };

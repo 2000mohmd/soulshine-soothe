@@ -147,15 +147,46 @@ describe("handleScreenerResponses", () => {
 // --- GET /api/v1/entitlements ---------------------------------------------------
 
 describe("handleEntitlements", () => {
-  it("reports the free daily cap (8) as the single source of truth, no usage yet", async () => {
+  it("reports the free first-conversation cap (15), trial eligibility and no coach", async () => {
     const body = await (await handleEntitlements(req("/api/v1/entitlements"))).json();
     expect(body.tier).toBe("free");
     expect(body.chat.unlimited).toBe(false);
-    expect(body.chat.dailyLimit).toBe(8);
-    expect(body.chat.dailyCredits).toBe(8);
+    expect(body.chat.dailyLimit).toBe(15);
+    expect(body.chat.dailyCredits).toBe(15);
     expect(body.chat.usedToday).toBe(0);
-    expect(body.chat.remainingToday).toBe(8);
+    expect(body.chat.remainingToday).toBe(15);
     expect(typeof body.chat.resetsAt).toBe("string");
+    expect(body.chat.intro).toEqual({ limit: 15, used: 0, remaining: 15 });
+    expect(body.trial).toEqual({ active: false, endsAt: null, eligible: true, days: 3 });
+    expect(body.features.humanCoach).toBe(false);
+  });
+
+  it("a trialing pro member: trial active with its end date, no human coach yet", async () => {
+    h.state.tables["profiles"] = {
+      maybeSingle: {
+        subscription_tier: "pro",
+        stripe_subscription_status: "trialing",
+        subscription_current_period_end: "2026-10-20T00:00:00.000Z",
+      },
+    };
+    const body = await (await handleEntitlements(req("/api/v1/entitlements"))).json();
+    expect(body.trial).toEqual({
+      active: true,
+      endsAt: "2026-10-20T00:00:00.000Z",
+      eligible: false,
+      days: 3,
+    });
+    expect(body.features.humanCoach).toBe(false);
+    expect(body.chat.intro).toBeNull();
+  });
+
+  it("an active (charged) pro member gets the human coach and no second trial", async () => {
+    h.state.tables["profiles"] = {
+      maybeSingle: { subscription_tier: "pro", stripe_subscription_status: "active" },
+    };
+    const body = await (await handleEntitlements(req("/api/v1/entitlements"))).json();
+    expect(body.features.humanCoach).toBe(true);
+    expect(body.trial.eligible).toBe(false);
   });
 
   it("derives usedToday / remainingToday from chat_rate_limits.day_count (the enforced counter)", async () => {
@@ -163,7 +194,7 @@ describe("handleEntitlements", () => {
     h.state.tables["chat_rate_limits"] = { maybeSingle: { day_start: today, day_count: 3 } };
     const body = await (await handleEntitlements(req("/api/v1/entitlements"))).json();
     expect(body.chat.usedToday).toBe(3);
-    expect(body.chat.remainingToday).toBe(5);
+    expect(body.chat.remainingToday).toBe(12);
   });
 
   it("ignores a stale day_count from a previous UTC day", async () => {
@@ -172,7 +203,7 @@ describe("handleEntitlements", () => {
     };
     const body = await (await handleEntitlements(req("/api/v1/entitlements"))).json();
     expect(body.chat.usedToday).toBe(0);
-    expect(body.chat.remainingToday).toBe(8);
+    expect(body.chat.remainingToday).toBe(15);
   });
 
   it("reports pro as unlimited-ish with the 200/day cap and one weekly call", async () => {
@@ -200,7 +231,6 @@ describe("handleEntitlements", () => {
     expect(body.voice.enabled).toBe(false);
     expect(body.voice.weeklyLimit).toBe(0);
   });
-
 
   it("401s without a valid token", async () => {
     h.state.authOk = false;

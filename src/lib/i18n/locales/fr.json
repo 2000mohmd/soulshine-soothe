@@ -119,7 +119,9 @@
     "sendMessage": "Envoyer le message",
     "disclaimer": "Kalm est un compagnon IA, pas un thérapeute. En cas de crise, utilisez l'aide immédiate.",
     "limitCoachMessage": "Nous avons atteint la limite de messages de votre forfait pour aujourd'hui. Passez à un forfait supérieur pour que nous puissions continuer ensemble — j'aimerais poursuivre avec vous.",
-    "limitStillHere": "L'aide en cas de crise et les coachs humains restent toujours disponibles, et je serai là demain."
+    "limitStillHere": "L'aide en cas de crise est toujours disponible, et je serai là demain.",
+    "introLimitMessage": "J'ai vraiment apprécié faire ta connaissance. Commence ton essai gratuit de {{days}} jours pour qu'on continue ensemble — rien n'est prélevé pendant l'essai, et tu peux annuler à tout moment.",
+    "introStillHere": "Les lignes d'aide en cas de crise sont toujours gratuites, avec ou sans abonnement."
   },
   "quickActions": {
     "anxious": "Je me sens anxieux",
@@ -467,9 +469,9 @@
     "tiers": {
       "free": {
         "name": "Gratuit",
-        "tagline": "Un point de départ tout en douceur.",
+        "tagline": "Fais connaissance avec ton coach.",
         "features": {
-          "messages": "8 messages par jour avec votre compagnon",
+          "messages": "Ta première conversation et ton plan personnel",
           "calls": "Pas d'appels vocaux",
           "tracking": "Humeur, habitudes, exercices et bilans"
         }
@@ -481,7 +483,8 @@
           "messages": "200 messages par jour",
           "calls": "Un appel vocal de 30 minutes par semaine",
           "history": "Historique complet des conversations",
-          "export": "Rapport de progression partageable"
+          "export": "Rapport de progression partageable",
+          "coach": "Coach humain (accessible après l'essai gratuit)"
         }
       },
       "premium": {
@@ -492,10 +495,18 @@
           "calls": "Deux appels vocaux de 30 minutes par semaine",
           "history": "Historique complet des conversations",
           "export": "Rapport de progression partageable",
-          "priority": "Réponses du support en priorité"
+          "priority": "Réponses du support en priorité",
+          "coach": "Coach humain (accessible après l'essai gratuit)"
         }
       }
-    }
+    },
+    "startTrial": "Commencer l'essai gratuit de {{days}} jours",
+    "sentToGuardian": "Nous avons envoyé le lien de paiement à ton parent ou tuteur par e-mail.",
+    "guardianEmailMissing": "Un parent ou tuteur paie pour les comptes ados. Ajoute d'abord son e-mail depuis la note dans ta conversation.",
+    "trialActive": "Ton essai gratuit se termine le {{date}} — la facturation commence ensuite, sauf si tu annules.",
+    "trialActiveNoDate": "Tu es en période d'essai gratuit.",
+    "trialCoachNote": "Les coachs humains sont accessibles une fois l'essai terminé et ton abonnement actif.",
+    "usageIntro": "Ta première conversation"
   },
   "call": {
     "start": "Démarrer un appel vocal",
@@ -650,7 +661,8 @@
     "youLabel": "Vous",
     "teamLabel": "Soutien Kalm",
     "noMessages": "Pas encore de message — quelqu'un vous écrira ici.",
-    "inChat": "Soutien Kalm"
+    "inChat": "Soutien Kalm",
+    "paidOnly": "Les coachs humains font partie de Pro et Premium, et sont accessibles une fois l'essai gratuit terminé. Si tu n'es pas en sécurité maintenant, utilise les lignes ci-dessus — elles sont toujours gratuites."
   },
   "guardian": {
     "title": "En attente d'un parent ou tuteur",

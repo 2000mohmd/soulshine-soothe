@@ -80,7 +80,9 @@ export async function sendGuardianConsentEmail(input: {
       }),
     });
     if (!response.ok) {
-      console.error(`[guardian] consent email failed [${response.status}]: ${await response.text()}`);
+      console.error(
+        `[guardian] consent email failed [${response.status}]: ${await response.text()}`,
+      );
       return false;
     }
     return true;
@@ -90,9 +92,69 @@ export async function sendGuardianConsentEmail(input: {
   }
 }
 
+/**
+ * Teens can't pay themselves: their checkout link goes to the guardian on file.
+ * Stripe Checkout links expire after 24 hours; the teen can send a fresh one.
+ */
+export async function sendGuardianPaymentEmail(input: {
+  guardianEmail: string;
+  guardianName: string | null;
+  teenName: string | null;
+  planName: string;
+  trialDays: number;
+  checkoutUrl: string;
+}): Promise<boolean> {
+  const apiKey = process.env["RESEND_API_KEY"];
+  if (!apiKey) {
+    console.error("[guardian] payment email skipped: RESEND_API_KEY missing");
+    return false;
+  }
+
+  const who = input.teenName ? input.teenName : "The teenager in your care";
+  const text = [
+    input.guardianName ? `Hello ${input.guardianName},` : "Hello,",
+    "",
+    `${who} would like to continue using Kalm on the ${input.planName} plan, and asked us to send you the payment link.`,
+    "",
+    input.trialDays > 0
+      ? `It starts with a ${input.trialDays}-day free trial: your card is not charged during the trial, and you can cancel any time before it ends at no cost.`
+      : "You can cancel the subscription at any time.",
+    "",
+    `Set up the plan: ${input.checkoutUrl}`,
+    "",
+    "This link works for 24 hours. If it has expired, they can send you a new one from the app.",
+    "",
+    "Kalm is a wellness companion, not a therapist, doctor or emergency service. Crisis help lines are always free in the app, with or without a plan.",
+    "",
+    "If you did not expect this email, you can simply ignore it — nothing is charged unless you complete the payment page.",
+  ].join("\n");
+
+  try {
+    const response = await fetch(RESEND_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        from: FROM,
+        to: [input.guardianEmail],
+        subject: "Payment link for Kalm",
+        text,
+      }),
+    });
+    if (!response.ok) {
+      console.error(
+        `[guardian] payment email failed [${response.status}]: ${await response.text()}`,
+      );
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("[guardian] payment email threw", error);
+    return false;
+  }
+}
+
 export type ConsentActionResult =
-  | { ok: true; action: "approve" | "withdraw" }
-  | { ok: false; reason: "invalid" };
+  { ok: true; action: "approve" | "withdraw" } | { ok: false; reason: "invalid" };
 
 /**
  * Applies the guardian's decision from the emailed link. Uses the service-role

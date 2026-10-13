@@ -8,7 +8,9 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Send, UserRound } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ArrowLeft, LifeBuoy, Loader2, Send, UserRound } from "lucide-react";
+import { crisisCopy } from "@/lib/crisis";
 import {
   getMyHumanSupport,
   replyToMyHumanSupport,
@@ -23,7 +25,7 @@ export function HumanSupportPanel({
   threadId: string | null;
   onBack: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const queryClient = useQueryClient();
   const fetchRequest = useServerFn(getMyHumanSupport);
   const createRequest = useServerFn(requestHumanSupport);
@@ -104,7 +106,37 @@ export function HumanSupportPanel({
             <Loader2 className="size-4 animate-spin text-muted-foreground" aria-hidden />
           )}
 
-          {!isLoading && !active && (
+          {!isLoading && !active && data?.coach_available === false && (
+            // Human coaches are paid (plans only, after the trial). Crisis help
+            // is never part of that: it comes first, for everyone.
+            <div className="space-y-4">
+              <ul className="space-y-2">
+                {crisisCopy(language).resources.map((resource) => (
+                  <li
+                    key={resource.name}
+                    className="flex gap-3 rounded-2xl border border-border p-3"
+                  >
+                    <LifeBuoy className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+                    <span className="text-sm">
+                      <span className="block font-medium">{resource.name}</span>
+                      <span className="block text-muted-foreground">{resource.contact}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="space-y-3 rounded-2xl border border-primary/25 bg-primary/5 p-4 text-center">
+                <p className="text-sm">{t("humanSupport.paidOnly")}</p>
+                <Link
+                  to="/plans"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground"
+                >
+                  {t("chat.upgradeCta")}
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {!isLoading && !active && data?.coach_available !== false && (
             <button
               type="button"
               onClick={() => ask.mutate()}

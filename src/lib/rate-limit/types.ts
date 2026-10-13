@@ -5,7 +5,8 @@
 // The crisis-detection gate is NEVER rate-limited — it runs earlier in
 // sendMessage, before any limiter is consulted (see crisis-gate.server.ts).
 
-export type RateLimitReason = "window" | "daily";
+// "intro": a free member has used their first conversation (chat.functions.ts).
+export type RateLimitReason = "window" | "daily" | "intro";
 
 export type RateLimitDecision = {
   allowed: boolean;

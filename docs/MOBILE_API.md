@@ -21,7 +21,7 @@ screener escalation) is identical on both.
 |---|---|
 | Supabase Project URL | `https://c--131e98f1-a346-4d26-80a3-2be1f7e5e55c-prod.lovable.cloud` |
 | Supabase publishable (anon) key | `sb_publishable_4wG145sBMTCz4HhD8VQzUA_VTSNAe8m` |
-| API base URL | `<deployed app domain>/api/v1` — **ask the backend owner for the exact production domain**; it is not fixed in this repo |
+| API base URL | `https://soulshine-soothe.lovable.app/api/v1` (the published app). Endpoints only exist there once the backend owner has **published** the version that adds them in Lovable; if one returns `404`, ask for a publish |
 
 The publishable key is meant to be embedded in a client app (it is the
 mobile/web equivalent of a public API key, not a secret) — safe to commit to
@@ -115,7 +115,7 @@ statuses:
 |---|---|
 | `400` | Invalid JSON body, failed validation, or a business-rule rejection (e.g. under-13 sign-up) |
 | `401` | Missing / malformed / expired / revoked bearer token |
-| `402` | Feature requires a higher plan (voice calls on Free) |
+| `402` | Feature requires a paid plan (voice calls on Free; a new human-coach request on Free or during the trial) |
 | `403` | Forbidden (admin-only endpoint, or a guardian-consent hold on a teen account) |
 | `404` | Resource not found, or not owned by the caller |
 | `409` | Conflict (e.g. a call session is already active) |
@@ -329,15 +329,25 @@ severity is never answered with a rate-limit / daily-cap notice.
   "type": "message", "id": "uuid",
   "content": "You've reached your plan's message limit for today. Upgrade any time and we can pick this right back up — or I'll be right here again tomorrow.",
   "created_at": "ISO-8601", "actions": [],
-  "limit": { "reason": "daily", "tier": "free", "dailyLimit": 8, "resetsAt": "ISO-8601 (next UTC midnight)" }
+  "limit": { "reason": "daily", "tier": "pro", "dailyLimit": 200, "resetsAt": "ISO-8601 (next UTC midnight)" }
 }
 ```
 
-When `reply.limit.reason === "daily"`, show an **upgrade prompt** (link to
-your plan-picker screen / `POST /api/v1/billing/checkout`) — not a crisis
-card, not a generic error. `reply.limit` is absent on a normal reply, and
-present with `reason: "window"` (no upgrade framing — just a short
-"slow down a moment" throttle) if a short-term burst limit trips instead.
+`reply.limit.reason` is one of:
+
+- `"intro"`: **a free member's first conversation is used up.** Free
+  accounts get onboarding, their plan preview and one first conversation
+  (15 messages, lifetime; no daily refill), then a 3-day free trial of Pro or
+  Premium. Shape:
+  `{ "reason": "intro", "tier": "free", "introLimit": 15, "trialDays": 3 }`.
+  Show a "Start your 3-day free trial" prompt leading to your plan picker.
+- `"daily"`: a paid plan's daily cap. Show an upgrade prompt (Pro → Premium).
+- `"window"`: a short burst throttle; no upgrade framing, just "slow down a
+  moment".
+
+None of these is a crisis card or an error. `reply.limit` is absent on a
+normal reply. A message flagged as a possible crisis is never limited, on any
+plan.
 
 ### 5.2 `POST /api/v1/chat/messages/stream`
 
@@ -444,6 +454,15 @@ Not the same as §12 (account/billing support): this is the mental-health
 "reach a person" path, with its own tables (`human_support_requests` /
 `human_support_messages`).
 
+**Paid members only.** Coaches are paid staff, so a NEW request needs Pro,
+Premium or Org **after** the free trial (`coach_available` below, or
+`features.humanCoach` in entitlements). Otherwise `POST` returns `402`. An
+already-open conversation can always be continued. When it's `false`, show
+the crisis resources (`GET /api/v1/crisis-resources`) **first**, then "Human
+coaches are part of Pro and Premium, and open once your free trial ends" with
+a link to your plan picker. Never show a bare paywall on this screen: it's
+reachable from the crisis card.
+
 **How it flows**
 
 1. Member taps "Talk to a human" → `POST /api/v1/human-support` with the
@@ -483,6 +502,9 @@ request, no duplicate is created: `note` is added to the existing one.
 { "request_id": "uuid", "already_open": false, "status": "queued" }
 ```
 
+`402 Payment Required` if there's no open request and they're on Free or
+still in the trial (see "Paid members only" above).
+
 #### `GET /api/v1/human-support`
 
 Their current request, or the most recent closed one:
@@ -499,11 +521,13 @@ Their current request, or the most recent closed one:
     "messages": [
       { "id": "uuid", "sender": "user | human", "content": "…", "created_at": "ISO-8601" }
     ]
-  }
+  },
+  "coach_available": true
 }
 ```
 
-`request: null` = they've never asked. `queued` = waiting for a person,
+`coach_available`: whether they may open a NEW request (paid, past the
+trial). `request: null` = they've never asked. `queued` = waiting for a person,
 `claimed` = a coach has picked it up / replied, `closed` = finished. Render
 `human` messages clearly as a person from the Kalm team, never as the AI.
 `severity` is the most recent safety flag from the last 6 hours, for the
@@ -575,11 +599,18 @@ drive your plan-limit UI instead of guessing from local state.
   "billingInterval": "monthly | yearly | null",
   "chat": {
     "unlimited": false,
-    "dailyLimit": 8,
-    "dailyCredits": 8,
+    "dailyLimit": 15,
+    "dailyCredits": 15,
     "usedToday": 3,
-    "remainingToday": 5,
-    "resetsAt": "ISO-8601 (next UTC midnight)"
+    "remainingToday": 12,
+    "resetsAt": "ISO-8601 (next UTC midnight)",
+    "intro": { "limit": 15, "used": 3, "remaining": 12 }
+  },
+  "trial": {
+    "active": false,
+    "endsAt": null,
+    "eligible": true,
+    "days": 3
   },
   "voice": {
     "enabled": false,
@@ -593,11 +624,32 @@ drive your plan-limit UI instead of guessing from local state.
   "features": {
     "unlimitedHistory": false,
     "liveSessions": false,
-    "dataExport": false
+    "dataExport": false,
+    "humanCoach": false
   }
 }
 ```
 
+**Plans at a glance (what to gate on):**
+
+| | Free | Trial (Pro/Premium, 3 days) | Pro / Premium (charged) |
+|---|---|---|---|
+| Onboarding + plan preview | ✓ | ✓ | ✓ |
+| AI chat | first conversation only (`chat.intro`) | ✓ | ✓ |
+| Voice calls | ✗ | ✓ | ✓ |
+| Human coach (§5.5) | ✗ | ✗ | ✓ (`features.humanCoach`) |
+| Crisis lines, crisis card, safety plan | **always** | **always** | **always** |
+
+- `chat.intro` (free only, `null` on paid): their one first conversation.
+  When `remaining` hits 0 the next message returns `reply.limit.reason:
+  "intro"` (§5.1). Use it for a "N messages left in your first conversation"
+  hint if you want one.
+- `trial.eligible`: checkout would start with the free trial (they've never
+  subscribed); label the button "Start 3-day free trial" instead of "Choose".
+  `trial.active` / `trial.endsAt`: they're on the trial now, and when billing
+  starts.
+- `features.humanCoach`: may open a NEW human-coach request. `false` on free
+  and during the trial.
 - `chat.dailyLimit` is the exact number the chat endpoint enforces — one
   source of truth with `reply.limit.dailyLimit` in §5.1.
 - For pro/premium/org, `chat.unlimited` is `true` and `dailyCredits` /
@@ -620,8 +672,20 @@ drive your plan-limit UI instead of guessing from local state.
 All fields optional (defaults: `premium` / `monthly`). Returns:
 
 ```json
-{ "checkoutUrl": "https://checkout.stripe.com/…", "sessionId": "…", "plan": "premium", "interval": "monthly", "priceId": "…" }
+{ "checkoutUrl": "https://checkout.stripe.com/…", "trialDays": 3, "plan": "premium", "interval": "monthly" }
 ```
+
+- **Free trial:** someone who has never subscribed gets `trialDays: 3`.
+  Stripe collects their card, charges nothing for 3 days, then bills unless
+  they cancel (in the billing portal, §7.2). Anyone who has subscribed
+  before gets `trialDays: 0` and is charged straight away. One trial per person.
+- **Teen accounts (13–17)** are paid for by their parent/guardian: instead of
+  a `checkoutUrl` the response is
+  `{ "sentToGuardian": true, "trialDays": 3, "plan": …, "interval": … }`, and
+  the link has been emailed to the guardian on file (valid 24 h; calling
+  again sends a fresh one). Show "We've emailed the payment link to your
+  parent". `400` if no guardian email is on file yet: collect it via
+  `POST /api/v1/guardian-consent` first.
 
 Open `checkoutUrl` in an in-app browser / `url_launcher`. `successUrl` /
 `cancelUrl` default to the request's `Origin` header or `APP_BASE_URL` —

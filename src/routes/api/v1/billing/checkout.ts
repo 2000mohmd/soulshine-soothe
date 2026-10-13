@@ -1,10 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import {
-  createCheckoutSession,
-  ensureStripeCustomer,
-  resolvePlanPriceId,
-} from "@/lib/billing/stripe.server";
+import { startCheckoutCore } from "@/lib/billing.functions";
 import { ApiError, handle, json, readJson, requireAuth } from "../-shared";
 
 const Body = z.object({
@@ -58,10 +54,16 @@ export const Route = createFileRoute("/api/v1/billing/checkout")({
 
           const plan = body.plan ?? "premium";
           const interval = body.interval ?? "monthly";
+          const base = defaultBaseUrl(request);
 
-          let priceId: string;
+          let result;
           try {
-            priceId = await resolvePlanPriceId(plan, interval);
+            result = await startCheckoutCore(supabase, userId, {
+              plan,
+              interval,
+              successUrl: body.successUrl ?? `${base}/settings?checkout=success`,
+              cancelUrl: body.cancelUrl ?? `${base}/settings?checkout=cancelled`,
+            });
           } catch (err) {
             throw new ApiError(
               500,
@@ -69,30 +71,16 @@ export const Route = createFileRoute("/api/v1/billing/checkout")({
             );
           }
 
-          const { data: authUser } = await supabase.auth.getUser();
-          const customerId = await ensureStripeCustomer(
-            supabase,
-            userId,
-            authUser?.user?.email ?? null,
-          );
-
-          const base = defaultBaseUrl(request);
-          const session = await createCheckoutSession({
-            customerId,
-            priceId,
-            userId,
-            successUrl: body.successUrl ?? `${base}/settings?checkout=success`,
-            cancelUrl: body.cancelUrl ?? `${base}/settings?checkout=cancelled`,
-          });
-
-          if (!session.url) throw new ApiError(500, "Stripe did not return a checkout URL.");
-          return json({
-            checkoutUrl: session.url,
-            sessionId: session.id,
-            plan,
-            interval,
-            priceId,
-          });
+          if ("error" in result) {
+            throw result.error === "guardian-email-missing"
+              ? new ApiError(
+                  400,
+                  "Teen accounts are paid for by a parent: add their email first (POST /api/v1/guardian-consent).",
+                )
+              : new ApiError(500, "Couldn't email the payment link to the parent.");
+          }
+          // Teens: { sentToGuardian: true } and no checkoutUrl.
+          return json({ ...result, plan, interval });
         }),
     },
   },

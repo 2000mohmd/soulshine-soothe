@@ -45,8 +45,8 @@ const PRICES: Record<Exclude<Tier, "free">, Record<BillingInterval, number>> = {
 
 const TIERS: { id: Tier; featureKeys: string[] }[] = [
   { id: "free", featureKeys: ["messages", "calls", "tracking"] },
-  { id: "pro", featureKeys: ["messages", "calls", "history", "export"] },
-  { id: "premium", featureKeys: ["messages", "calls", "history", "export", "priority"] },
+  { id: "pro", featureKeys: ["messages", "calls", "coach", "history", "export"] },
+  { id: "premium", featureKeys: ["messages", "calls", "coach", "history", "export", "priority"] },
 ];
 
 function PlansPage() {
@@ -76,7 +76,16 @@ function PlansPage() {
         return;
       }
       setPending(null);
-      toast.error(t("plans.checkoutFailed"), { description: result.error });
+      if ("sentToGuardian" in result) {
+        toast.success(t("plans.sentToGuardian"));
+        return;
+      }
+      toast.error(
+        result.error === "guardian-email-missing"
+          ? t("plans.guardianEmailMissing")
+          : t("plans.checkoutFailed"),
+        result.error.startsWith("guardian-") ? undefined : { description: result.error },
+      );
     },
     onError: () => {
       setPending(null);
@@ -101,6 +110,7 @@ function PlansPage() {
 
   const currentTier = (entitlements?.tier ?? "free") as string;
   const isOrg = currentTier === "org";
+  const trial = entitlements?.trial;
 
   return (
     <AppShell>
@@ -114,6 +124,16 @@ function PlansPage() {
           <div className="surface-soft border border-primary/30 p-4 text-sm">
             <p className="font-medium">{t("plans.successTitle")}</p>
             <p className="mt-1 text-muted-foreground">{t("plans.successBody")}</p>
+          </div>
+        )}
+        {trial?.active && (
+          <div className="surface-soft border border-primary/30 p-4 text-sm">
+            <p className="font-medium">
+              {trial.endsAt
+                ? t("plans.trialActive", { date: new Date(trial.endsAt).toLocaleDateString() })
+                : t("plans.trialActiveNoDate")}
+            </p>
+            <p className="mt-1 text-muted-foreground">{t("plans.trialCoachNote")}</p>
           </div>
         )}
         {checkout === "cancelled" && (
@@ -224,6 +244,8 @@ function PlansPage() {
                       >
                         {pending === id ? (
                           <Loader2 className="size-4 animate-spin" aria-hidden />
+                        ) : trial?.eligible ? (
+                          t("plans.startTrial", { days: trial.days })
                         ) : (
                           t("plans.choose", { plan: t(`plans.tiers.${id}.name`) })
                         )}
@@ -242,9 +264,13 @@ function PlansPage() {
             <h2 className="text-lg">{t("plans.usageTitle")}</h2>
             <dl className="mt-4 grid gap-4 sm:grid-cols-2">
               <div>
-                <dt className="text-muted-foreground">{t("plans.usageMessages")}</dt>
+                <dt className="text-muted-foreground">
+                  {entitlements.chat.intro ? t("plans.usageIntro") : t("plans.usageMessages")}
+                </dt>
                 <dd className="mt-1 font-medium">
-                  {entitlements.chat.usedToday} / {entitlements.chat.dailyLimit}
+                  {entitlements.chat.intro
+                    ? `${entitlements.chat.intro.used} / ${entitlements.chat.intro.limit}`
+                    : `${entitlements.chat.usedToday} / ${entitlements.chat.dailyLimit}`}
                 </dd>
               </div>
               <div>

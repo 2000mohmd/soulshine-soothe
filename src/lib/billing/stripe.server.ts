@@ -11,12 +11,7 @@
 // error rather than silently no-opping.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
-  planLookupKey,
-  planPriceIdFromEnv,
-  type BillingInterval,
-  type PaidPlan,
-} from "./plans";
+import { planLookupKey, planPriceIdFromEnv, type BillingInterval, type PaidPlan } from "./plans";
 
 const STRIPE_API = "https://api.stripe.com/v1";
 // Managed-connection fallback: when there is no own STRIPE_SECRET_KEY, the same
@@ -119,7 +114,6 @@ export async function fetchStripePrice(priceId: string): Promise<StripePrice> {
   return stripeRequest<StripePrice>("GET", `/prices/${priceId}`);
 }
 
-
 export type StripeCustomer = { id: string; email: string | null };
 
 /** Finds or creates the Stripe Customer for a user, storing the id on `profiles`. */
@@ -163,6 +157,8 @@ export async function createCheckoutSession(input: {
   successUrl: string;
   cancelUrl: string;
   userId: string;
+  /** Free trial length; 0 = charge now. Checkout always collects a card. */
+  trialDays?: number;
 }): Promise<CheckoutSession> {
   return stripeRequest<CheckoutSession>("POST", "/checkout/sessions", {
     customer: input.customerId,
@@ -173,6 +169,7 @@ export async function createCheckoutSession(input: {
     cancel_url: input.cancelUrl,
     "subscription_data[metadata][user_id]": input.userId,
     "metadata[user_id]": input.userId,
+    ...(input.trialDays ? { "subscription_data[trial_period_days]": input.trialDays } : {}),
     allow_promotion_codes: "true" as unknown as undefined, // Stripe wants the literal string "true"
   });
 }

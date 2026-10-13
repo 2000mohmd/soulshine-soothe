@@ -34,6 +34,7 @@ import { HumanSupportPanel } from "@/components/HumanSupportPanel";
 import { GuardianConsentNotice } from "@/components/GuardianConsentNotice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/lib/i18n";
+import { getEntitlements } from "@/lib/entitlements.functions";
 
 export const Route = createFileRoute("/_authenticated/chat")({
   head: () => ({
@@ -196,6 +197,14 @@ function ChatPage() {
     queryKey: ["my-profile"],
     queryFn: () => fetchProfile(),
   });
+  // Free members only ever hit the "first conversation used up" notice.
+  const fetchEntitlements = useServerFn(getEntitlements);
+  const { data: entitlements } = useQuery({
+    queryKey: ["entitlements"],
+    queryFn: () => fetchEntitlements(),
+  });
+  const onFreePlan = Boolean(entitlements?.chat.intro);
+  const trialDays = entitlements?.trial.days ?? 3;
 
   useEffect(() => {
     if (profileData && !profileData.profile?.onboarding_completed) {
@@ -406,14 +415,20 @@ function ChatPage() {
               ) : message.content_type === "rate_limit" ? (
                 <div key={message.id} className="mx-auto w-fit max-w-[85%] text-center">
                   <div className="space-y-3 rounded-2xl border border-primary/25 bg-primary/5 p-4">
-                    <p className="text-sm leading-relaxed">{t("chat.limitCoachMessage")}</p>
+                    <p className="text-sm leading-relaxed">
+                      {onFreePlan
+                        ? t("chat.introLimitMessage", { days: trialDays })
+                        : t("chat.limitCoachMessage")}
+                    </p>
                     <Link
                       to="/plans"
                       className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground"
                     >
-                      {t("chat.upgradeCta")}
+                      {onFreePlan ? t("plans.startTrial", { days: trialDays }) : t("chat.upgradeCta")}
                     </Link>
-                    <p className="text-xs text-muted-foreground">{t("chat.limitStillHere")}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {onFreePlan ? t("chat.introStillHere") : t("chat.limitStillHere")}
+                    </p>
                   </div>
                 </div>
               ) : message.sender === "system" ? (
