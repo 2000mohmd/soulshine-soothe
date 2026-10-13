@@ -40,6 +40,17 @@ test.describe("v1 API, signed in", () => {
     "/api/v1/support/threads",
     "/api/v1/calls/sessions",
     "/api/v1/export",
+    "/api/v1/human-support",
+    "/api/v1/safety-plan",
+    "/api/v1/daily-prompt",
+    "/api/v1/digests",
+    "/api/v1/care-resources",
+    "/api/v1/memories",
+    "/api/v1/language",
+    "/api/v1/guardian-consent",
+    "/api/v1/habits/insights",
+    "/api/v1/chat/threads/primary",
+    "/api/v1/data-summary",
   ]) {
     test(`GET ${path} → 200 JSON`, async ({ request }) => {
       const res = await request.get(path, { headers });

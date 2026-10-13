@@ -35,16 +35,27 @@ import { Route as AuthenticatedAdminTeamRouteImport } from './routes/_authentica
 import { Route as ApiPublicGuardianConsentRouteImport } from './routes/api/public/guardian-consent'
 import { Route as ApiPublicUnsubscribeRouteImport } from './routes/api/public/unsubscribe'
 import { Route as ApiV1AccountRouteImport } from './routes/api/v1/account'
+import { Route as ApiV1CareResourcesRouteImport } from './routes/api/v1/care-resources'
 import { Route as ApiV1CrisisResourcesRouteImport } from './routes/api/v1/crisis-resources'
+import { Route as ApiV1DailyPromptRouteImport } from './routes/api/v1/daily-prompt'
+import { Route as ApiV1DataSummaryRouteImport } from './routes/api/v1/data-summary'
+import { Route as ApiV1DigestsRouteImport } from './routes/api/v1/digests'
+import { Route as ApiV1EmailPreferencesRouteImport } from './routes/api/v1/email-preferences'
 import { Route as ApiV1EntitlementsRouteImport } from './routes/api/v1/entitlements'
 import { Route as ApiV1ExercisesRouteImport } from './routes/api/v1/exercises'
 import { Route as ApiV1ExportRouteImport } from './routes/api/v1/export'
+import { Route as ApiV1GuardianConsentRouteImport } from './routes/api/v1/guardian-consent'
 import { Route as ApiV1HabitsRouteImport } from './routes/api/v1/habits'
+import { Route as ApiV1HumanSupportRouteImport } from './routes/api/v1/human-support'
+import { Route as ApiV1LanguageRouteImport } from './routes/api/v1/language'
+import { Route as ApiV1MemoriesRouteImport } from './routes/api/v1/memories'
 import { Route as ApiV1MoodRouteImport } from './routes/api/v1/mood'
+import { Route as ApiV1NudgesRouteImport } from './routes/api/v1/nudges'
 import { Route as ApiV1OnboardingRouteImport } from './routes/api/v1/onboarding'
 import { Route as ApiV1PersonasRouteImport } from './routes/api/v1/personas'
 import { Route as ApiV1PreferencesRouteImport } from './routes/api/v1/preferences'
 import { Route as ApiV1ProfileRouteImport } from './routes/api/v1/profile'
+import { Route as ApiV1SafetyPlanRouteImport } from './routes/api/v1/safety-plan'
 import { Route as ApiV1ScreenersRouteImport } from './routes/api/v1/screeners'
 import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin/users/index'
 import { Route as AuthenticatedAdminUsersUserIdRouteImport } from './routes/_authenticated/admin/users/$userId'
@@ -57,9 +68,18 @@ import { Route as ApiV1CallsSessionsRouteImport } from './routes/api/v1/calls/se
 import { Route as ApiV1ChatHistoryRouteImport } from './routes/api/v1/chat/history'
 import { Route as ApiV1ChatMessagesRouteImport } from './routes/api/v1/chat/messages'
 import { Route as ApiV1ChatThreadsRouteImport } from './routes/api/v1/chat/threads'
+import { Route as ApiV1ExercisesSlugRouteImport } from './routes/api/v1/exercises/$slug'
+import { Route as ApiV1HabitsIdRouteImport } from './routes/api/v1/habits/$id'
+import { Route as ApiV1HabitsInsightsRouteImport } from './routes/api/v1/habits/insights'
+import { Route as ApiV1HabitsSuggestedRouteImport } from './routes/api/v1/habits/suggested'
+import { Route as ApiV1HumanSupportMessagesRouteImport } from './routes/api/v1/human-support/messages'
+import { Route as ApiV1MemoriesIdRouteImport } from './routes/api/v1/memories/$id'
 import { Route as ApiV1PushRegisterTokenRouteImport } from './routes/api/v1/push/register-token'
 import { Route as ApiV1SupportThreadsRouteImport } from './routes/api/v1/support/threads'
+import { Route as ApiV1VoiceTranscribeRouteImport } from './routes/api/v1/voice/transcribe'
 import { Route as ApiV1ChatMessagesStreamRouteImport } from './routes/api/v1/chat/messages/stream'
+import { Route as ApiV1ChatThreadsIdRouteImport } from './routes/api/v1/chat/threads/$id'
+import { Route as ApiV1ChatThreadsPrimaryRouteImport } from './routes/api/v1/chat/threads/primary'
 import { Route as ApiV1ScreenersTypeResponsesRouteImport } from './routes/api/v1/screeners/$type/responses'
 import { Route as ApiV1SupportThreadsIdRouteImport } from './routes/api/v1/support/threads/$id'
 import { Route as ApiV1AdminUsersUserIdCostRouteImport } from './routes/api/v1/admin/users/$userId/cost'
@@ -200,9 +220,34 @@ const ApiV1AccountRoute = ApiV1AccountRouteImport.update({
   path: '/api/v1/account',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1CareResourcesRoute = ApiV1CareResourcesRouteImport.update({
+  id: '/api/v1/care-resources',
+  path: '/api/v1/care-resources',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1CrisisResourcesRoute = ApiV1CrisisResourcesRouteImport.update({
   id: '/api/v1/crisis-resources',
   path: '/api/v1/crisis-resources',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1DailyPromptRoute = ApiV1DailyPromptRouteImport.update({
+  id: '/api/v1/daily-prompt',
+  path: '/api/v1/daily-prompt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1DataSummaryRoute = ApiV1DataSummaryRouteImport.update({
+  id: '/api/v1/data-summary',
+  path: '/api/v1/data-summary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1DigestsRoute = ApiV1DigestsRouteImport.update({
+  id: '/api/v1/digests',
+  path: '/api/v1/digests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1EmailPreferencesRoute = ApiV1EmailPreferencesRouteImport.update({
+  id: '/api/v1/email-preferences',
+  path: '/api/v1/email-preferences',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiV1EntitlementsRoute = ApiV1EntitlementsRouteImport.update({
@@ -220,14 +265,39 @@ const ApiV1ExportRoute = ApiV1ExportRouteImport.update({
   path: '/api/v1/export',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1GuardianConsentRoute = ApiV1GuardianConsentRouteImport.update({
+  id: '/api/v1/guardian-consent',
+  path: '/api/v1/guardian-consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1HabitsRoute = ApiV1HabitsRouteImport.update({
   id: '/api/v1/habits',
   path: '/api/v1/habits',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1HumanSupportRoute = ApiV1HumanSupportRouteImport.update({
+  id: '/api/v1/human-support',
+  path: '/api/v1/human-support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1LanguageRoute = ApiV1LanguageRouteImport.update({
+  id: '/api/v1/language',
+  path: '/api/v1/language',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1MemoriesRoute = ApiV1MemoriesRouteImport.update({
+  id: '/api/v1/memories',
+  path: '/api/v1/memories',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1MoodRoute = ApiV1MoodRouteImport.update({
   id: '/api/v1/mood',
   path: '/api/v1/mood',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1NudgesRoute = ApiV1NudgesRouteImport.update({
+  id: '/api/v1/nudges',
+  path: '/api/v1/nudges',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiV1OnboardingRoute = ApiV1OnboardingRouteImport.update({
@@ -248,6 +318,11 @@ const ApiV1PreferencesRoute = ApiV1PreferencesRouteImport.update({
 const ApiV1ProfileRoute = ApiV1ProfileRouteImport.update({
   id: '/api/v1/profile',
   path: '/api/v1/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1SafetyPlanRoute = ApiV1SafetyPlanRouteImport.update({
+  id: '/api/v1/safety-plan',
+  path: '/api/v1/safety-plan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiV1ScreenersRoute = ApiV1ScreenersRouteImport.update({
@@ -315,6 +390,37 @@ const ApiV1ChatThreadsRoute = ApiV1ChatThreadsRouteImport.update({
   path: '/api/v1/chat/threads',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1ExercisesSlugRoute = ApiV1ExercisesSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => ApiV1ExercisesRoute,
+} as any)
+const ApiV1HabitsIdRoute = ApiV1HabitsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiV1HabitsRoute,
+} as any)
+const ApiV1HabitsInsightsRoute = ApiV1HabitsInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => ApiV1HabitsRoute,
+} as any)
+const ApiV1HabitsSuggestedRoute = ApiV1HabitsSuggestedRouteImport.update({
+  id: '/suggested',
+  path: '/suggested',
+  getParentRoute: () => ApiV1HabitsRoute,
+} as any)
+const ApiV1HumanSupportMessagesRoute =
+  ApiV1HumanSupportMessagesRouteImport.update({
+    id: '/messages',
+    path: '/messages',
+    getParentRoute: () => ApiV1HumanSupportRoute,
+  } as any)
+const ApiV1MemoriesIdRoute = ApiV1MemoriesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiV1MemoriesRoute,
+} as any)
 const ApiV1PushRegisterTokenRoute = ApiV1PushRegisterTokenRouteImport.update({
   id: '/api/v1/push/register-token',
   path: '/api/v1/push/register-token',
@@ -325,10 +431,25 @@ const ApiV1SupportThreadsRoute = ApiV1SupportThreadsRouteImport.update({
   path: '/api/v1/support/threads',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1VoiceTranscribeRoute = ApiV1VoiceTranscribeRouteImport.update({
+  id: '/api/v1/voice/transcribe',
+  path: '/api/v1/voice/transcribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1ChatMessagesStreamRoute = ApiV1ChatMessagesStreamRouteImport.update({
   id: '/stream',
   path: '/stream',
   getParentRoute: () => ApiV1ChatMessagesRoute,
+} as any)
+const ApiV1ChatThreadsIdRoute = ApiV1ChatThreadsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiV1ChatThreadsRoute,
+} as any)
+const ApiV1ChatThreadsPrimaryRoute = ApiV1ChatThreadsPrimaryRouteImport.update({
+  id: '/primary',
+  path: '/primary',
+  getParentRoute: () => ApiV1ChatThreadsRoute,
 } as any)
 const ApiV1ScreenersTypeResponsesRoute =
   ApiV1ScreenersTypeResponsesRouteImport.update({
@@ -360,9 +481,9 @@ const ApiV1CallsSessionsIdTurnsRoute =
   } as any)
 const ApiV1ChatThreadsIdMessagesRoute =
   ApiV1ChatThreadsIdMessagesRouteImport.update({
-    id: '/$id/messages',
-    path: '/$id/messages',
-    getParentRoute: () => ApiV1ChatThreadsRoute,
+    id: '/messages',
+    path: '/messages',
+    getParentRoute: () => ApiV1ChatThreadsIdRoute,
   } as any)
 const ApiV1SupportThreadsIdMessagesRoute =
   ApiV1SupportThreadsIdMessagesRouteImport.update({
@@ -396,16 +517,27 @@ export interface FileRoutesByFullPath {
   '/api/public/guardian-consent': typeof ApiPublicGuardianConsentRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
   '/api/v1/account': typeof ApiV1AccountRoute
+  '/api/v1/care-resources': typeof ApiV1CareResourcesRoute
   '/api/v1/crisis-resources': typeof ApiV1CrisisResourcesRoute
+  '/api/v1/daily-prompt': typeof ApiV1DailyPromptRoute
+  '/api/v1/data-summary': typeof ApiV1DataSummaryRoute
+  '/api/v1/digests': typeof ApiV1DigestsRoute
+  '/api/v1/email-preferences': typeof ApiV1EmailPreferencesRoute
   '/api/v1/entitlements': typeof ApiV1EntitlementsRoute
-  '/api/v1/exercises': typeof ApiV1ExercisesRoute
+  '/api/v1/exercises': typeof ApiV1ExercisesRouteWithChildren
   '/api/v1/export': typeof ApiV1ExportRoute
-  '/api/v1/habits': typeof ApiV1HabitsRoute
+  '/api/v1/guardian-consent': typeof ApiV1GuardianConsentRoute
+  '/api/v1/habits': typeof ApiV1HabitsRouteWithChildren
+  '/api/v1/human-support': typeof ApiV1HumanSupportRouteWithChildren
+  '/api/v1/language': typeof ApiV1LanguageRoute
+  '/api/v1/memories': typeof ApiV1MemoriesRouteWithChildren
   '/api/v1/mood': typeof ApiV1MoodRoute
+  '/api/v1/nudges': typeof ApiV1NudgesRoute
   '/api/v1/onboarding': typeof ApiV1OnboardingRoute
   '/api/v1/personas': typeof ApiV1PersonasRoute
   '/api/v1/preferences': typeof ApiV1PreferencesRoute
   '/api/v1/profile': typeof ApiV1ProfileRoute
+  '/api/v1/safety-plan': typeof ApiV1SafetyPlanRoute
   '/api/v1/screeners': typeof ApiV1ScreenersRouteWithChildren
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
@@ -418,10 +550,19 @@ export interface FileRoutesByFullPath {
   '/api/v1/chat/history': typeof ApiV1ChatHistoryRoute
   '/api/v1/chat/messages': typeof ApiV1ChatMessagesRouteWithChildren
   '/api/v1/chat/threads': typeof ApiV1ChatThreadsRouteWithChildren
+  '/api/v1/exercises/$slug': typeof ApiV1ExercisesSlugRoute
+  '/api/v1/habits/$id': typeof ApiV1HabitsIdRoute
+  '/api/v1/habits/insights': typeof ApiV1HabitsInsightsRoute
+  '/api/v1/habits/suggested': typeof ApiV1HabitsSuggestedRoute
+  '/api/v1/human-support/messages': typeof ApiV1HumanSupportMessagesRoute
+  '/api/v1/memories/$id': typeof ApiV1MemoriesIdRoute
   '/api/v1/push/register-token': typeof ApiV1PushRegisterTokenRoute
   '/api/v1/support/threads': typeof ApiV1SupportThreadsRouteWithChildren
+  '/api/v1/voice/transcribe': typeof ApiV1VoiceTranscribeRoute
   '/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/api/v1/chat/messages/stream': typeof ApiV1ChatMessagesStreamRoute
+  '/api/v1/chat/threads/$id': typeof ApiV1ChatThreadsIdRouteWithChildren
+  '/api/v1/chat/threads/primary': typeof ApiV1ChatThreadsPrimaryRoute
   '/api/v1/screeners/$type/responses': typeof ApiV1ScreenersTypeResponsesRoute
   '/api/v1/support/threads/$id': typeof ApiV1SupportThreadsIdRouteWithChildren
   '/api/v1/admin/users/$userId/cost': typeof ApiV1AdminUsersUserIdCostRoute
@@ -454,16 +595,27 @@ export interface FileRoutesByTo {
   '/api/public/guardian-consent': typeof ApiPublicGuardianConsentRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
   '/api/v1/account': typeof ApiV1AccountRoute
+  '/api/v1/care-resources': typeof ApiV1CareResourcesRoute
   '/api/v1/crisis-resources': typeof ApiV1CrisisResourcesRoute
+  '/api/v1/daily-prompt': typeof ApiV1DailyPromptRoute
+  '/api/v1/data-summary': typeof ApiV1DataSummaryRoute
+  '/api/v1/digests': typeof ApiV1DigestsRoute
+  '/api/v1/email-preferences': typeof ApiV1EmailPreferencesRoute
   '/api/v1/entitlements': typeof ApiV1EntitlementsRoute
-  '/api/v1/exercises': typeof ApiV1ExercisesRoute
+  '/api/v1/exercises': typeof ApiV1ExercisesRouteWithChildren
   '/api/v1/export': typeof ApiV1ExportRoute
-  '/api/v1/habits': typeof ApiV1HabitsRoute
+  '/api/v1/guardian-consent': typeof ApiV1GuardianConsentRoute
+  '/api/v1/habits': typeof ApiV1HabitsRouteWithChildren
+  '/api/v1/human-support': typeof ApiV1HumanSupportRouteWithChildren
+  '/api/v1/language': typeof ApiV1LanguageRoute
+  '/api/v1/memories': typeof ApiV1MemoriesRouteWithChildren
   '/api/v1/mood': typeof ApiV1MoodRoute
+  '/api/v1/nudges': typeof ApiV1NudgesRoute
   '/api/v1/onboarding': typeof ApiV1OnboardingRoute
   '/api/v1/personas': typeof ApiV1PersonasRoute
   '/api/v1/preferences': typeof ApiV1PreferencesRoute
   '/api/v1/profile': typeof ApiV1ProfileRoute
+  '/api/v1/safety-plan': typeof ApiV1SafetyPlanRoute
   '/api/v1/screeners': typeof ApiV1ScreenersRouteWithChildren
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
@@ -476,10 +628,19 @@ export interface FileRoutesByTo {
   '/api/v1/chat/history': typeof ApiV1ChatHistoryRoute
   '/api/v1/chat/messages': typeof ApiV1ChatMessagesRouteWithChildren
   '/api/v1/chat/threads': typeof ApiV1ChatThreadsRouteWithChildren
+  '/api/v1/exercises/$slug': typeof ApiV1ExercisesSlugRoute
+  '/api/v1/habits/$id': typeof ApiV1HabitsIdRoute
+  '/api/v1/habits/insights': typeof ApiV1HabitsInsightsRoute
+  '/api/v1/habits/suggested': typeof ApiV1HabitsSuggestedRoute
+  '/api/v1/human-support/messages': typeof ApiV1HumanSupportMessagesRoute
+  '/api/v1/memories/$id': typeof ApiV1MemoriesIdRoute
   '/api/v1/push/register-token': typeof ApiV1PushRegisterTokenRoute
   '/api/v1/support/threads': typeof ApiV1SupportThreadsRouteWithChildren
+  '/api/v1/voice/transcribe': typeof ApiV1VoiceTranscribeRoute
   '/admin/users': typeof AuthenticatedAdminUsersIndexRoute
   '/api/v1/chat/messages/stream': typeof ApiV1ChatMessagesStreamRoute
+  '/api/v1/chat/threads/$id': typeof ApiV1ChatThreadsIdRouteWithChildren
+  '/api/v1/chat/threads/primary': typeof ApiV1ChatThreadsPrimaryRoute
   '/api/v1/screeners/$type/responses': typeof ApiV1ScreenersTypeResponsesRoute
   '/api/v1/support/threads/$id': typeof ApiV1SupportThreadsIdRouteWithChildren
   '/api/v1/admin/users/$userId/cost': typeof ApiV1AdminUsersUserIdCostRoute
@@ -515,16 +676,27 @@ export interface FileRoutesById {
   '/api/public/guardian-consent': typeof ApiPublicGuardianConsentRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
   '/api/v1/account': typeof ApiV1AccountRoute
+  '/api/v1/care-resources': typeof ApiV1CareResourcesRoute
   '/api/v1/crisis-resources': typeof ApiV1CrisisResourcesRoute
+  '/api/v1/daily-prompt': typeof ApiV1DailyPromptRoute
+  '/api/v1/data-summary': typeof ApiV1DataSummaryRoute
+  '/api/v1/digests': typeof ApiV1DigestsRoute
+  '/api/v1/email-preferences': typeof ApiV1EmailPreferencesRoute
   '/api/v1/entitlements': typeof ApiV1EntitlementsRoute
-  '/api/v1/exercises': typeof ApiV1ExercisesRoute
+  '/api/v1/exercises': typeof ApiV1ExercisesRouteWithChildren
   '/api/v1/export': typeof ApiV1ExportRoute
-  '/api/v1/habits': typeof ApiV1HabitsRoute
+  '/api/v1/guardian-consent': typeof ApiV1GuardianConsentRoute
+  '/api/v1/habits': typeof ApiV1HabitsRouteWithChildren
+  '/api/v1/human-support': typeof ApiV1HumanSupportRouteWithChildren
+  '/api/v1/language': typeof ApiV1LanguageRoute
+  '/api/v1/memories': typeof ApiV1MemoriesRouteWithChildren
   '/api/v1/mood': typeof ApiV1MoodRoute
+  '/api/v1/nudges': typeof ApiV1NudgesRoute
   '/api/v1/onboarding': typeof ApiV1OnboardingRoute
   '/api/v1/personas': typeof ApiV1PersonasRoute
   '/api/v1/preferences': typeof ApiV1PreferencesRoute
   '/api/v1/profile': typeof ApiV1ProfileRoute
+  '/api/v1/safety-plan': typeof ApiV1SafetyPlanRoute
   '/api/v1/screeners': typeof ApiV1ScreenersRouteWithChildren
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
@@ -537,10 +709,19 @@ export interface FileRoutesById {
   '/api/v1/chat/history': typeof ApiV1ChatHistoryRoute
   '/api/v1/chat/messages': typeof ApiV1ChatMessagesRouteWithChildren
   '/api/v1/chat/threads': typeof ApiV1ChatThreadsRouteWithChildren
+  '/api/v1/exercises/$slug': typeof ApiV1ExercisesSlugRoute
+  '/api/v1/habits/$id': typeof ApiV1HabitsIdRoute
+  '/api/v1/habits/insights': typeof ApiV1HabitsInsightsRoute
+  '/api/v1/habits/suggested': typeof ApiV1HabitsSuggestedRoute
+  '/api/v1/human-support/messages': typeof ApiV1HumanSupportMessagesRoute
+  '/api/v1/memories/$id': typeof ApiV1MemoriesIdRoute
   '/api/v1/push/register-token': typeof ApiV1PushRegisterTokenRoute
   '/api/v1/support/threads': typeof ApiV1SupportThreadsRouteWithChildren
+  '/api/v1/voice/transcribe': typeof ApiV1VoiceTranscribeRoute
   '/_authenticated/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/api/v1/chat/messages/stream': typeof ApiV1ChatMessagesStreamRoute
+  '/api/v1/chat/threads/$id': typeof ApiV1ChatThreadsIdRouteWithChildren
+  '/api/v1/chat/threads/primary': typeof ApiV1ChatThreadsPrimaryRoute
   '/api/v1/screeners/$type/responses': typeof ApiV1ScreenersTypeResponsesRoute
   '/api/v1/support/threads/$id': typeof ApiV1SupportThreadsIdRouteWithChildren
   '/api/v1/admin/users/$userId/cost': typeof ApiV1AdminUsersUserIdCostRoute
@@ -576,16 +757,27 @@ export interface FileRouteTypes {
     | '/api/public/guardian-consent'
     | '/api/public/unsubscribe'
     | '/api/v1/account'
+    | '/api/v1/care-resources'
     | '/api/v1/crisis-resources'
+    | '/api/v1/daily-prompt'
+    | '/api/v1/data-summary'
+    | '/api/v1/digests'
+    | '/api/v1/email-preferences'
     | '/api/v1/entitlements'
     | '/api/v1/exercises'
     | '/api/v1/export'
+    | '/api/v1/guardian-consent'
     | '/api/v1/habits'
+    | '/api/v1/human-support'
+    | '/api/v1/language'
+    | '/api/v1/memories'
     | '/api/v1/mood'
+    | '/api/v1/nudges'
     | '/api/v1/onboarding'
     | '/api/v1/personas'
     | '/api/v1/preferences'
     | '/api/v1/profile'
+    | '/api/v1/safety-plan'
     | '/api/v1/screeners'
     | '/admin/'
     | '/admin/users/$userId'
@@ -598,10 +790,19 @@ export interface FileRouteTypes {
     | '/api/v1/chat/history'
     | '/api/v1/chat/messages'
     | '/api/v1/chat/threads'
+    | '/api/v1/exercises/$slug'
+    | '/api/v1/habits/$id'
+    | '/api/v1/habits/insights'
+    | '/api/v1/habits/suggested'
+    | '/api/v1/human-support/messages'
+    | '/api/v1/memories/$id'
     | '/api/v1/push/register-token'
     | '/api/v1/support/threads'
+    | '/api/v1/voice/transcribe'
     | '/admin/users/'
     | '/api/v1/chat/messages/stream'
+    | '/api/v1/chat/threads/$id'
+    | '/api/v1/chat/threads/primary'
     | '/api/v1/screeners/$type/responses'
     | '/api/v1/support/threads/$id'
     | '/api/v1/admin/users/$userId/cost'
@@ -634,16 +835,27 @@ export interface FileRouteTypes {
     | '/api/public/guardian-consent'
     | '/api/public/unsubscribe'
     | '/api/v1/account'
+    | '/api/v1/care-resources'
     | '/api/v1/crisis-resources'
+    | '/api/v1/daily-prompt'
+    | '/api/v1/data-summary'
+    | '/api/v1/digests'
+    | '/api/v1/email-preferences'
     | '/api/v1/entitlements'
     | '/api/v1/exercises'
     | '/api/v1/export'
+    | '/api/v1/guardian-consent'
     | '/api/v1/habits'
+    | '/api/v1/human-support'
+    | '/api/v1/language'
+    | '/api/v1/memories'
     | '/api/v1/mood'
+    | '/api/v1/nudges'
     | '/api/v1/onboarding'
     | '/api/v1/personas'
     | '/api/v1/preferences'
     | '/api/v1/profile'
+    | '/api/v1/safety-plan'
     | '/api/v1/screeners'
     | '/admin'
     | '/admin/users/$userId'
@@ -656,10 +868,19 @@ export interface FileRouteTypes {
     | '/api/v1/chat/history'
     | '/api/v1/chat/messages'
     | '/api/v1/chat/threads'
+    | '/api/v1/exercises/$slug'
+    | '/api/v1/habits/$id'
+    | '/api/v1/habits/insights'
+    | '/api/v1/habits/suggested'
+    | '/api/v1/human-support/messages'
+    | '/api/v1/memories/$id'
     | '/api/v1/push/register-token'
     | '/api/v1/support/threads'
+    | '/api/v1/voice/transcribe'
     | '/admin/users'
     | '/api/v1/chat/messages/stream'
+    | '/api/v1/chat/threads/$id'
+    | '/api/v1/chat/threads/primary'
     | '/api/v1/screeners/$type/responses'
     | '/api/v1/support/threads/$id'
     | '/api/v1/admin/users/$userId/cost'
@@ -694,16 +915,27 @@ export interface FileRouteTypes {
     | '/api/public/guardian-consent'
     | '/api/public/unsubscribe'
     | '/api/v1/account'
+    | '/api/v1/care-resources'
     | '/api/v1/crisis-resources'
+    | '/api/v1/daily-prompt'
+    | '/api/v1/data-summary'
+    | '/api/v1/digests'
+    | '/api/v1/email-preferences'
     | '/api/v1/entitlements'
     | '/api/v1/exercises'
     | '/api/v1/export'
+    | '/api/v1/guardian-consent'
     | '/api/v1/habits'
+    | '/api/v1/human-support'
+    | '/api/v1/language'
+    | '/api/v1/memories'
     | '/api/v1/mood'
+    | '/api/v1/nudges'
     | '/api/v1/onboarding'
     | '/api/v1/personas'
     | '/api/v1/preferences'
     | '/api/v1/profile'
+    | '/api/v1/safety-plan'
     | '/api/v1/screeners'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/users/$userId'
@@ -716,10 +948,19 @@ export interface FileRouteTypes {
     | '/api/v1/chat/history'
     | '/api/v1/chat/messages'
     | '/api/v1/chat/threads'
+    | '/api/v1/exercises/$slug'
+    | '/api/v1/habits/$id'
+    | '/api/v1/habits/insights'
+    | '/api/v1/habits/suggested'
+    | '/api/v1/human-support/messages'
+    | '/api/v1/memories/$id'
     | '/api/v1/push/register-token'
     | '/api/v1/support/threads'
+    | '/api/v1/voice/transcribe'
     | '/_authenticated/admin/users/'
     | '/api/v1/chat/messages/stream'
+    | '/api/v1/chat/threads/$id'
+    | '/api/v1/chat/threads/primary'
     | '/api/v1/screeners/$type/responses'
     | '/api/v1/support/threads/$id'
     | '/api/v1/admin/users/$userId/cost'
@@ -738,16 +979,27 @@ export interface RootRouteChildren {
   ApiPublicGuardianConsentRoute: typeof ApiPublicGuardianConsentRoute
   ApiPublicUnsubscribeRoute: typeof ApiPublicUnsubscribeRoute
   ApiV1AccountRoute: typeof ApiV1AccountRoute
+  ApiV1CareResourcesRoute: typeof ApiV1CareResourcesRoute
   ApiV1CrisisResourcesRoute: typeof ApiV1CrisisResourcesRoute
+  ApiV1DailyPromptRoute: typeof ApiV1DailyPromptRoute
+  ApiV1DataSummaryRoute: typeof ApiV1DataSummaryRoute
+  ApiV1DigestsRoute: typeof ApiV1DigestsRoute
+  ApiV1EmailPreferencesRoute: typeof ApiV1EmailPreferencesRoute
   ApiV1EntitlementsRoute: typeof ApiV1EntitlementsRoute
-  ApiV1ExercisesRoute: typeof ApiV1ExercisesRoute
+  ApiV1ExercisesRoute: typeof ApiV1ExercisesRouteWithChildren
   ApiV1ExportRoute: typeof ApiV1ExportRoute
-  ApiV1HabitsRoute: typeof ApiV1HabitsRoute
+  ApiV1GuardianConsentRoute: typeof ApiV1GuardianConsentRoute
+  ApiV1HabitsRoute: typeof ApiV1HabitsRouteWithChildren
+  ApiV1HumanSupportRoute: typeof ApiV1HumanSupportRouteWithChildren
+  ApiV1LanguageRoute: typeof ApiV1LanguageRoute
+  ApiV1MemoriesRoute: typeof ApiV1MemoriesRouteWithChildren
   ApiV1MoodRoute: typeof ApiV1MoodRoute
+  ApiV1NudgesRoute: typeof ApiV1NudgesRoute
   ApiV1OnboardingRoute: typeof ApiV1OnboardingRoute
   ApiV1PersonasRoute: typeof ApiV1PersonasRoute
   ApiV1PreferencesRoute: typeof ApiV1PreferencesRoute
   ApiV1ProfileRoute: typeof ApiV1ProfileRoute
+  ApiV1SafetyPlanRoute: typeof ApiV1SafetyPlanRoute
   ApiV1ScreenersRoute: typeof ApiV1ScreenersRouteWithChildren
   ApiPublicHooksEvaluateNudgesRoute: typeof ApiPublicHooksEvaluateNudgesRoute
   ApiPublicHooksStripeWebhookRoute: typeof ApiPublicHooksStripeWebhookRoute
@@ -760,6 +1012,7 @@ export interface RootRouteChildren {
   ApiV1ChatThreadsRoute: typeof ApiV1ChatThreadsRouteWithChildren
   ApiV1PushRegisterTokenRoute: typeof ApiV1PushRegisterTokenRoute
   ApiV1SupportThreadsRoute: typeof ApiV1SupportThreadsRouteWithChildren
+  ApiV1VoiceTranscribeRoute: typeof ApiV1VoiceTranscribeRoute
   ApiV1AdminUsersUserIdCostRoute: typeof ApiV1AdminUsersUserIdCostRoute
 }
 
@@ -947,11 +1200,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/care-resources': {
+      id: '/api/v1/care-resources'
+      path: '/api/v1/care-resources'
+      fullPath: '/api/v1/care-resources'
+      preLoaderRoute: typeof ApiV1CareResourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/crisis-resources': {
       id: '/api/v1/crisis-resources'
       path: '/api/v1/crisis-resources'
       fullPath: '/api/v1/crisis-resources'
       preLoaderRoute: typeof ApiV1CrisisResourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/daily-prompt': {
+      id: '/api/v1/daily-prompt'
+      path: '/api/v1/daily-prompt'
+      fullPath: '/api/v1/daily-prompt'
+      preLoaderRoute: typeof ApiV1DailyPromptRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/data-summary': {
+      id: '/api/v1/data-summary'
+      path: '/api/v1/data-summary'
+      fullPath: '/api/v1/data-summary'
+      preLoaderRoute: typeof ApiV1DataSummaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/digests': {
+      id: '/api/v1/digests'
+      path: '/api/v1/digests'
+      fullPath: '/api/v1/digests'
+      preLoaderRoute: typeof ApiV1DigestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/email-preferences': {
+      id: '/api/v1/email-preferences'
+      path: '/api/v1/email-preferences'
+      fullPath: '/api/v1/email-preferences'
+      preLoaderRoute: typeof ApiV1EmailPreferencesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/v1/entitlements': {
@@ -975,6 +1263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1ExportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/guardian-consent': {
+      id: '/api/v1/guardian-consent'
+      path: '/api/v1/guardian-consent'
+      fullPath: '/api/v1/guardian-consent'
+      preLoaderRoute: typeof ApiV1GuardianConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/habits': {
       id: '/api/v1/habits'
       path: '/api/v1/habits'
@@ -982,11 +1277,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1HabitsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/human-support': {
+      id: '/api/v1/human-support'
+      path: '/api/v1/human-support'
+      fullPath: '/api/v1/human-support'
+      preLoaderRoute: typeof ApiV1HumanSupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/language': {
+      id: '/api/v1/language'
+      path: '/api/v1/language'
+      fullPath: '/api/v1/language'
+      preLoaderRoute: typeof ApiV1LanguageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/memories': {
+      id: '/api/v1/memories'
+      path: '/api/v1/memories'
+      fullPath: '/api/v1/memories'
+      preLoaderRoute: typeof ApiV1MemoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/mood': {
       id: '/api/v1/mood'
       path: '/api/v1/mood'
       fullPath: '/api/v1/mood'
       preLoaderRoute: typeof ApiV1MoodRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/nudges': {
+      id: '/api/v1/nudges'
+      path: '/api/v1/nudges'
+      fullPath: '/api/v1/nudges'
+      preLoaderRoute: typeof ApiV1NudgesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/v1/onboarding': {
@@ -1015,6 +1338,13 @@ declare module '@tanstack/react-router' {
       path: '/api/v1/profile'
       fullPath: '/api/v1/profile'
       preLoaderRoute: typeof ApiV1ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/safety-plan': {
+      id: '/api/v1/safety-plan'
+      path: '/api/v1/safety-plan'
+      fullPath: '/api/v1/safety-plan'
+      preLoaderRoute: typeof ApiV1SafetyPlanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/v1/screeners': {
@@ -1101,6 +1431,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1ChatThreadsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/exercises/$slug': {
+      id: '/api/v1/exercises/$slug'
+      path: '/$slug'
+      fullPath: '/api/v1/exercises/$slug'
+      preLoaderRoute: typeof ApiV1ExercisesSlugRouteImport
+      parentRoute: typeof ApiV1ExercisesRoute
+    }
+    '/api/v1/habits/$id': {
+      id: '/api/v1/habits/$id'
+      path: '/$id'
+      fullPath: '/api/v1/habits/$id'
+      preLoaderRoute: typeof ApiV1HabitsIdRouteImport
+      parentRoute: typeof ApiV1HabitsRoute
+    }
+    '/api/v1/habits/insights': {
+      id: '/api/v1/habits/insights'
+      path: '/insights'
+      fullPath: '/api/v1/habits/insights'
+      preLoaderRoute: typeof ApiV1HabitsInsightsRouteImport
+      parentRoute: typeof ApiV1HabitsRoute
+    }
+    '/api/v1/habits/suggested': {
+      id: '/api/v1/habits/suggested'
+      path: '/suggested'
+      fullPath: '/api/v1/habits/suggested'
+      preLoaderRoute: typeof ApiV1HabitsSuggestedRouteImport
+      parentRoute: typeof ApiV1HabitsRoute
+    }
+    '/api/v1/human-support/messages': {
+      id: '/api/v1/human-support/messages'
+      path: '/messages'
+      fullPath: '/api/v1/human-support/messages'
+      preLoaderRoute: typeof ApiV1HumanSupportMessagesRouteImport
+      parentRoute: typeof ApiV1HumanSupportRoute
+    }
+    '/api/v1/memories/$id': {
+      id: '/api/v1/memories/$id'
+      path: '/$id'
+      fullPath: '/api/v1/memories/$id'
+      preLoaderRoute: typeof ApiV1MemoriesIdRouteImport
+      parentRoute: typeof ApiV1MemoriesRoute
+    }
     '/api/v1/push/register-token': {
       id: '/api/v1/push/register-token'
       path: '/api/v1/push/register-token'
@@ -1115,12 +1487,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1SupportThreadsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/voice/transcribe': {
+      id: '/api/v1/voice/transcribe'
+      path: '/api/v1/voice/transcribe'
+      fullPath: '/api/v1/voice/transcribe'
+      preLoaderRoute: typeof ApiV1VoiceTranscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/chat/messages/stream': {
       id: '/api/v1/chat/messages/stream'
       path: '/stream'
       fullPath: '/api/v1/chat/messages/stream'
       preLoaderRoute: typeof ApiV1ChatMessagesStreamRouteImport
       parentRoute: typeof ApiV1ChatMessagesRoute
+    }
+    '/api/v1/chat/threads/$id': {
+      id: '/api/v1/chat/threads/$id'
+      path: '/$id'
+      fullPath: '/api/v1/chat/threads/$id'
+      preLoaderRoute: typeof ApiV1ChatThreadsIdRouteImport
+      parentRoute: typeof ApiV1ChatThreadsRoute
+    }
+    '/api/v1/chat/threads/primary': {
+      id: '/api/v1/chat/threads/primary'
+      path: '/primary'
+      fullPath: '/api/v1/chat/threads/primary'
+      preLoaderRoute: typeof ApiV1ChatThreadsPrimaryRouteImport
+      parentRoute: typeof ApiV1ChatThreadsRoute
     }
     '/api/v1/screeners/$type/responses': {
       id: '/api/v1/screeners/$type/responses'
@@ -1159,10 +1552,10 @@ declare module '@tanstack/react-router' {
     }
     '/api/v1/chat/threads/$id/messages': {
       id: '/api/v1/chat/threads/$id/messages'
-      path: '/$id/messages'
+      path: '/messages'
       fullPath: '/api/v1/chat/threads/$id/messages'
       preLoaderRoute: typeof ApiV1ChatThreadsIdMessagesRouteImport
-      parentRoute: typeof ApiV1ChatThreadsRoute
+      parentRoute: typeof ApiV1ChatThreadsIdRoute
     }
     '/api/v1/support/threads/$id/messages': {
       id: '/api/v1/support/threads/$id/messages'
@@ -1235,6 +1628,57 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface ApiV1ExercisesRouteChildren {
+  ApiV1ExercisesSlugRoute: typeof ApiV1ExercisesSlugRoute
+}
+
+const ApiV1ExercisesRouteChildren: ApiV1ExercisesRouteChildren = {
+  ApiV1ExercisesSlugRoute: ApiV1ExercisesSlugRoute,
+}
+
+const ApiV1ExercisesRouteWithChildren = ApiV1ExercisesRoute._addFileChildren(
+  ApiV1ExercisesRouteChildren,
+)
+
+interface ApiV1HabitsRouteChildren {
+  ApiV1HabitsIdRoute: typeof ApiV1HabitsIdRoute
+  ApiV1HabitsInsightsRoute: typeof ApiV1HabitsInsightsRoute
+  ApiV1HabitsSuggestedRoute: typeof ApiV1HabitsSuggestedRoute
+}
+
+const ApiV1HabitsRouteChildren: ApiV1HabitsRouteChildren = {
+  ApiV1HabitsIdRoute: ApiV1HabitsIdRoute,
+  ApiV1HabitsInsightsRoute: ApiV1HabitsInsightsRoute,
+  ApiV1HabitsSuggestedRoute: ApiV1HabitsSuggestedRoute,
+}
+
+const ApiV1HabitsRouteWithChildren = ApiV1HabitsRoute._addFileChildren(
+  ApiV1HabitsRouteChildren,
+)
+
+interface ApiV1HumanSupportRouteChildren {
+  ApiV1HumanSupportMessagesRoute: typeof ApiV1HumanSupportMessagesRoute
+}
+
+const ApiV1HumanSupportRouteChildren: ApiV1HumanSupportRouteChildren = {
+  ApiV1HumanSupportMessagesRoute: ApiV1HumanSupportMessagesRoute,
+}
+
+const ApiV1HumanSupportRouteWithChildren =
+  ApiV1HumanSupportRoute._addFileChildren(ApiV1HumanSupportRouteChildren)
+
+interface ApiV1MemoriesRouteChildren {
+  ApiV1MemoriesIdRoute: typeof ApiV1MemoriesIdRoute
+}
+
+const ApiV1MemoriesRouteChildren: ApiV1MemoriesRouteChildren = {
+  ApiV1MemoriesIdRoute: ApiV1MemoriesIdRoute,
+}
+
+const ApiV1MemoriesRouteWithChildren = ApiV1MemoriesRoute._addFileChildren(
+  ApiV1MemoriesRouteChildren,
+)
+
 interface ApiV1ScreenersRouteChildren {
   ApiV1ScreenersTypeResponsesRoute: typeof ApiV1ScreenersTypeResponsesRoute
 }
@@ -1271,12 +1715,25 @@ const ApiV1ChatMessagesRouteChildren: ApiV1ChatMessagesRouteChildren = {
 const ApiV1ChatMessagesRouteWithChildren =
   ApiV1ChatMessagesRoute._addFileChildren(ApiV1ChatMessagesRouteChildren)
 
-interface ApiV1ChatThreadsRouteChildren {
+interface ApiV1ChatThreadsIdRouteChildren {
   ApiV1ChatThreadsIdMessagesRoute: typeof ApiV1ChatThreadsIdMessagesRoute
 }
 
-const ApiV1ChatThreadsRouteChildren: ApiV1ChatThreadsRouteChildren = {
+const ApiV1ChatThreadsIdRouteChildren: ApiV1ChatThreadsIdRouteChildren = {
   ApiV1ChatThreadsIdMessagesRoute: ApiV1ChatThreadsIdMessagesRoute,
+}
+
+const ApiV1ChatThreadsIdRouteWithChildren =
+  ApiV1ChatThreadsIdRoute._addFileChildren(ApiV1ChatThreadsIdRouteChildren)
+
+interface ApiV1ChatThreadsRouteChildren {
+  ApiV1ChatThreadsIdRoute: typeof ApiV1ChatThreadsIdRouteWithChildren
+  ApiV1ChatThreadsPrimaryRoute: typeof ApiV1ChatThreadsPrimaryRoute
+}
+
+const ApiV1ChatThreadsRouteChildren: ApiV1ChatThreadsRouteChildren = {
+  ApiV1ChatThreadsIdRoute: ApiV1ChatThreadsIdRouteWithChildren,
+  ApiV1ChatThreadsPrimaryRoute: ApiV1ChatThreadsPrimaryRoute,
 }
 
 const ApiV1ChatThreadsRouteWithChildren =
@@ -1315,16 +1772,27 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicGuardianConsentRoute: ApiPublicGuardianConsentRoute,
   ApiPublicUnsubscribeRoute: ApiPublicUnsubscribeRoute,
   ApiV1AccountRoute: ApiV1AccountRoute,
+  ApiV1CareResourcesRoute: ApiV1CareResourcesRoute,
   ApiV1CrisisResourcesRoute: ApiV1CrisisResourcesRoute,
+  ApiV1DailyPromptRoute: ApiV1DailyPromptRoute,
+  ApiV1DataSummaryRoute: ApiV1DataSummaryRoute,
+  ApiV1DigestsRoute: ApiV1DigestsRoute,
+  ApiV1EmailPreferencesRoute: ApiV1EmailPreferencesRoute,
   ApiV1EntitlementsRoute: ApiV1EntitlementsRoute,
-  ApiV1ExercisesRoute: ApiV1ExercisesRoute,
+  ApiV1ExercisesRoute: ApiV1ExercisesRouteWithChildren,
   ApiV1ExportRoute: ApiV1ExportRoute,
-  ApiV1HabitsRoute: ApiV1HabitsRoute,
+  ApiV1GuardianConsentRoute: ApiV1GuardianConsentRoute,
+  ApiV1HabitsRoute: ApiV1HabitsRouteWithChildren,
+  ApiV1HumanSupportRoute: ApiV1HumanSupportRouteWithChildren,
+  ApiV1LanguageRoute: ApiV1LanguageRoute,
+  ApiV1MemoriesRoute: ApiV1MemoriesRouteWithChildren,
   ApiV1MoodRoute: ApiV1MoodRoute,
+  ApiV1NudgesRoute: ApiV1NudgesRoute,
   ApiV1OnboardingRoute: ApiV1OnboardingRoute,
   ApiV1PersonasRoute: ApiV1PersonasRoute,
   ApiV1PreferencesRoute: ApiV1PreferencesRoute,
   ApiV1ProfileRoute: ApiV1ProfileRoute,
+  ApiV1SafetyPlanRoute: ApiV1SafetyPlanRoute,
   ApiV1ScreenersRoute: ApiV1ScreenersRouteWithChildren,
   ApiPublicHooksEvaluateNudgesRoute: ApiPublicHooksEvaluateNudgesRoute,
   ApiPublicHooksStripeWebhookRoute: ApiPublicHooksStripeWebhookRoute,
@@ -1337,6 +1805,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiV1ChatThreadsRoute: ApiV1ChatThreadsRouteWithChildren,
   ApiV1PushRegisterTokenRoute: ApiV1PushRegisterTokenRoute,
   ApiV1SupportThreadsRoute: ApiV1SupportThreadsRouteWithChildren,
+  ApiV1VoiceTranscribeRoute: ApiV1VoiceTranscribeRoute,
   ApiV1AdminUsersUserIdCostRoute: ApiV1AdminUsersUserIdCostRoute,
 }
 export const routeTree = rootRouteImport

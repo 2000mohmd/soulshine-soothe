@@ -137,7 +137,13 @@ an expired or revoked token is rejected, not just a malformed one.
 | POST | `/api/v1/chat/messages` | yes | send a message — crisis-gated, rate-limited |
 | POST | `/api/v1/chat/messages/stream` | yes | same, as a server-sent-events stream |
 | GET | `/api/v1/chat/threads` | yes | the caller's single ongoing conversation (always one item) |
+| GET | `/api/v1/chat/threads/primary` | yes | that conversation + its messages (created on first call) |
+| DELETE | `/api/v1/chat/threads/:id` | yes | delete the conversation (a fresh one starts next time) |
 | GET | `/api/v1/chat/threads/:id/messages` | yes | paginated message history (preferred) |
+| POST | `/api/v1/voice/transcribe` | yes | voice note → text (then send it as a chat message) |
+| GET | `/api/v1/human-support` | yes | in-chat "Talk to a human": current request + messages |
+| POST | `/api/v1/human-support` | yes | ask a human coach to join |
+| POST | `/api/v1/human-support/messages` | yes | member replies to the human coach |
 | GET | `/api/v1/chat/history?thread_id=` | yes | older, non-paginated history read (superseded) |
 | GET | `/api/v1/crisis-resources` | **no** | localized crisis resource list |
 | GET | `/api/v1/entitlements` | yes | plan tier, message/voice limits and usage |
@@ -146,12 +152,27 @@ an expired or revoked token is rejected, not just a malformed one.
 | GET | `/api/v1/preferences` | yes | companion persona, theme, language |
 | PATCH | `/api/v1/preferences` | yes | update persona / theme |
 | GET | `/api/v1/personas` | **no** | companion persona catalogue |
+| GET / PUT | `/api/v1/language` | yes | the member's language (`en` / `ar` / `fr`) |
+| PATCH | `/api/v1/email-preferences` | yes | proactive emails on/off |
+| GET / POST | `/api/v1/guardian-consent` | yes | under-18: consent state / (re)send the guardian email |
 | POST | `/api/v1/mood` | yes | log a mood check-in |
 | GET | `/api/v1/habits` | yes | list habits + last 30 days of logs |
 | POST | `/api/v1/habits` | yes | create a habit |
 | PATCH | `/api/v1/habits` | yes | log/unlog a habit for a day |
+| PATCH / DELETE | `/api/v1/habits/:id` | yes | edit / delete a habit |
+| POST | `/api/v1/habits/suggested` | yes | add the starter habit set |
+| GET | `/api/v1/habits/insights` | yes | habit vs mood observations |
 | GET | `/api/v1/exercises` | yes | list exercises + recent completions |
+| GET | `/api/v1/exercises/:slug` | yes | one exercise with its steps |
 | POST | `/api/v1/exercises` | yes | record a completion |
+| GET / PUT | `/api/v1/safety-plan` | yes | personal safety plan |
+| GET / POST | `/api/v1/daily-prompt` | yes | today's reflection prompt / answer it |
+| GET | `/api/v1/digests` | yes | weekly summaries |
+| GET / PATCH | `/api/v1/nudges` | yes | proactive coach cards / dismiss |
+| GET | `/api/v1/care-resources` | yes | professional-support options for their region |
+| GET | `/api/v1/memories` | yes | "What Kalm remembers about you" |
+| DELETE | `/api/v1/memories/:id` | yes | forget one memory |
+| GET | `/api/v1/data-summary` | yes | what data is stored about them (counts) |
 | GET | `/api/v1/screeners` | yes | PHQ-9/GAD-7 state (due dates, history) |
 | POST | `/api/v1/screeners` | yes | submit a screener (alt. to the path below) |
 | POST | `/api/v1/screeners/:type/responses` | yes | submit PHQ-9/GAD-7 — item-9 crisis escalation |
@@ -340,10 +361,19 @@ header.
 
 ### 5.3 Reading history
 
-- **`GET /api/v1/chat/threads`** — `[{ id, title, created_at, updated_at }]`,
-  newest activity first. There is no create-thread endpoint — a thread is
-  created implicitly by §5.1 with no `thread_id`; use the `thread_id` it
-  returns.
+- **One continuous conversation per member.** The web app shows a single
+  ongoing chat with the coach, not a list of conversations. Build the main
+  chat screen on **`GET /api/v1/chat/threads/primary`** →
+  `{ thread: { id, title, created_at, updated_at }, messages: [...] }`
+  (same message shape as below; the thread is created on first call).
+  Sending §5.1 without a `thread_id` also lands in this same thread — it never
+  opens a new one.
+- **`GET /api/v1/chat/threads`** — `[{ id, title, created_at, updated_at }]`.
+  Always zero or one item (a unique index enforces one thread per member).
+- **`DELETE /api/v1/chat/threads/:id`** → `{ "ok": true }`. Deletes the
+  conversation ("clear chat"); the next `primary` call or message starts a
+  fresh one. Scoped to the caller: an id that isn't theirs deletes nothing
+  and still returns `{ "ok": true }`.
 - **`GET /api/v1/chat/threads/:id/messages?limit=&before=`** (preferred) —
   keyset-paginated. `limit` defaults to 50, clamped 1–200. `before` is the
   previous page's `nextBefore` (an exclusive ISO cursor). Returns:
@@ -394,7 +424,115 @@ A normal reply's `actions` array can include (discriminated by `type`):
 { type: "exercise_widget", slug, title, summary }
 { type: "screener_completed", screener_type: "phq9"|"gad7", total_score, severity, crisis: boolean, summary }
 { type: "stepup_suggested", summary }
+{ type: "human_support_requested", request_id, summary }
 ```
+
+`human_support_requested` means the companion itself asked a human coach to
+join (the member asked for a real person). Open/refresh the human-support view
+(§5.5); the request already exists, don't create another.
+
+### 5.5 In-chat human support ("Talk to a human")
+
+A member can ask a **real human coach** from the Kalm team to join their
+conversation. On the web this is the "Talk to a human" button in the chat
+header (and inside the crisis card); the companion can also open a request
+itself (the `human_support_requested` action, §5.4). Staff answer from the
+admin desk at `/admin/human`.
+
+Not the same as §12 (account/billing support): this is the mental-health
+"reach a person" path, with its own tables (`human_support_requests` /
+`human_support_messages`).
+
+**How it flows**
+
+1. Member taps "Talk to a human" → `POST /api/v1/human-support` with the
+   conversation id. A request is created at once (status `queued`); the team
+   gets an alert email with a short AI summary of the recent conversation.
+2. Show an acknowledgement immediately: the request is in, a person will reply
+   here. **Never imply someone is already reading**, and keep the crisis
+   resources (`GET /api/v1/crisis-resources`) visible while they wait.
+3. A staff reply arrives in two places at once:
+   - as a `sender: "human"` message on the request (`GET /api/v1/human-support`), and
+   - as a chat message with `content_type: "human_support"` in their
+     conversation, **only if the request was opened with a `thread_id`**.
+     Always send one.
+   A content-free push notification also goes out ("Kalm team" / "Someone
+   from the Kalm team replied to you."), once push is configured (§14). It
+   carries no data payload: on tap, open the chat and refresh this endpoint.
+4. The member replies with `POST /api/v1/human-support/messages`.
+5. Staff close the request when done (status `closed`). The next
+   `POST /api/v1/human-support` opens a new one.
+
+There is no realtime channel for this yet. While the human-support view is
+open, poll `GET /api/v1/human-support` every 10–15 s; otherwise rely on the
+push and refresh when the app comes to the foreground.
+
+#### `POST /api/v1/human-support`
+
+```json
+{ "thread_id": "uuid, optional but send it", "note": "optional, ≤2000 chars, their first message to the coach" }
+```
+
+Body may be empty. If the member already has an open (`queued`/`claimed`)
+request, no duplicate is created: `note` is added to the existing one.
+
+→ `200`
+
+```json
+{ "request_id": "uuid", "already_open": false, "status": "queued" }
+```
+
+#### `GET /api/v1/human-support`
+
+Their current request, or the most recent closed one:
+
+```json
+{
+  "request": {
+    "id": "uuid",
+    "status": "queued | claimed | closed",
+    "severity": "critical | high | moderate | null",
+    "created_at": "ISO-8601",
+    "claimed_at": "ISO-8601 | null",
+    "closed_at": "ISO-8601 | null",
+    "messages": [
+      { "id": "uuid", "sender": "user | human", "content": "…", "created_at": "ISO-8601" }
+    ]
+  }
+}
+```
+
+`request: null` = they've never asked. `queued` = waiting for a person,
+`claimed` = a coach has picked it up / replied, `closed` = finished. Render
+`human` messages clearly as a person from the Kalm team, never as the AI.
+`severity` is the most recent safety flag from the last 6 hours, for the
+team; don't show it to the member.
+
+#### `POST /api/v1/human-support/messages`
+
+```json
+{ "request_id": "uuid", "message": "1-2000 chars" }
+```
+
+→ `{ "ok": true }`. `404` if the request isn't theirs.
+
+### 5.6 Voice notes
+
+The web chat's microphone records a short clip, transcribes it, and puts the
+text in the composer for the person to review and send. Same on mobile:
+
+#### `POST /api/v1/voice/transcribe`
+
+```json
+{ "audio_base64": "…", "mime_type": "audio/wav | audio/mpeg" }
+```
+
+→ `{ "text": "the transcript" }`. Then send `text` through §5.1 like any
+typed message; this endpoint does not post anything. Record as **WAV or MP3**
+(anything other than `audio/mpeg`/`audio/mp3` is sent on as WAV). Returns
+`500 { "error": "Internal error" }` if voice isn't configured on the server
+(`OPENAI_API_KEY`) or the provider is out of credits; show "voice notes
+aren't available right now" and let them type instead.
 
 These are the companion having used a tool mid-conversation (logged a mood,
 launched an exercise, completed a screener in-chat, etc.) — show `summary`
@@ -654,9 +792,42 @@ Straightforward CRUD-shaped wrappers — request/response bodies below.
 ```
 `completed: false` deletes that day's log (un-checking). → `{ "ok": true, "completed": true|false, "thread_id": "uuid | null" }`.
 
+### `PATCH /api/v1/habits/:id`
+```json
+{ "name": "optional", "category": "optional", "frequency_target": 1-7, "is_active": true }
+```
+Send only the fields that change. → `{ "ok": true }`
+
+### `DELETE /api/v1/habits/:id`
+→ `{ "ok": true }`
+
+### `POST /api/v1/habits/suggested`
+No body. Adds the starter habit set, skipping any name they already have.
+→ `{ "added": 3 }`
+
+### `GET /api/v1/habits/insights`
+```json
+{
+  "insights": [
+    { "habit_id": "uuid", "habit_name": "…", "daysWithHabit": 6, "daysWithoutHabit": 9,
+      "avgMoodWithHabit": 3.8, "avgMoodWithoutHabit": 3.1, "delta": 0.7,
+      "headline": "Your mood averages 0.7 points higher on days you log \"…\"." }
+  ],
+  "moodDaysTracked": 15,
+  "note": "These are gentle observations, not clinical findings — correlation is not causation."
+}
+```
+Last 30 days. `delta` is `null` until there are 3+ days with and 3+ without
+the habit; show `headline` (already phrased for the member) and `note`.
+
 ### `GET /api/v1/exercises`
 → `{ "exercises": [ { id, slug, title, category, intro_text, steps, estimated_minutes } ], "completions": [...last 30...] }`
 Filtered server-side to age-appropriate content based on `account_type`.
+
+### `GET /api/v1/exercises/:slug`
+→ `{ id, slug, title, category, intro_text, steps, estimated_minutes }`, or
+`null` (with `200`) for an unknown slug. Use it to render the exercise behind
+an `exercise_launch` / `exercise_widget` action (§5.4).
 
 ### `POST /api/v1/exercises`
 ```json
@@ -675,6 +846,113 @@ At least one field required. → the full updated `Preferences` object.
 
 ### `GET /api/v1/personas` — **public, no auth**
 → `[ { "id": "warm", "description": "Gentle and validating. The default." }, ... ]`
+
+### `GET /api/v1/language` · `PUT /api/v1/language`
+GET → `{ "language": "en" | "ar" | "fr" | null }` (`null` = never set).
+PUT `{ "language": "ar" }` → `{ "language": "ar" }`; anything else is `400`.
+Drives the companion's reply language, emails and crisis resources. `ar` is
+right-to-left.
+
+### `PATCH /api/v1/email-preferences`
+`{ "opt_out": true }` → `{ "ok": true }`. Turns proactive emails (nudges,
+weekly digest) off/on. Current value: `GET /api/v1/profile` →
+`profile.email_opt_out`.
+
+### `GET /api/v1/guardian-consent` · `POST /api/v1/guardian-consent`
+For under-18 accounts, the companion stays silent until a parent/guardian
+approves by email (crisis resources are never held back).
+
+GET →
+```json
+{ "required": true, "status": "none | pending | granted | withdrawn",
+  "guardian_email": "…", "requested_at": "ISO-8601 | null", "granted_at": "ISO-8601 | null" }
+```
+While `required && status != "granted"`, show a waiting state instead of the
+chat composer (with crisis resources visible), as the web chat does.
+
+POST `{ "guardian_email": "…", "guardian_name": "optional" }` →
+`{ "ok": true, "emailed": true }`: (re)sends the consent email. Only call it
+when `required` is `true` (otherwise it errors).
+
+### `GET /api/v1/safety-plan` · `PUT /api/v1/safety-plan`
+A plan the member writes in calm moments and opens in hard ones (the shield
+button in the web chat header, and "Open my safety plan" on the crisis card).
+Owner-only; the companion sees it only if they consented to AI context.
+
+GET →
+```json
+{
+  "plan": {
+    "warning_signs": ["…"], "coping_steps": ["…"], "people": ["…"],
+    "professionals": ["…"], "safer_space": ["…"], "reasons_to_stay": ["…"],
+    "notes": "… | null", "updated_at": "ISO-8601 | null"
+  },
+  "exists": true
+}
+```
+PUT replaces the whole plan: send all six lists (each ≤20 items, ≤240 chars
+per item) plus optional `notes` (≤2000). → `{ "ok": true }`. Web section
+labels: My warning signs · What helps me settle · People I can reach ·
+Professionals / lines · Making my space safer · My reason to stay.
+
+### `GET /api/v1/daily-prompt` · `POST /api/v1/daily-prompt`
+GET →
+```json
+{ "prompt": { "id": "uuid", "prompt_text": "…", "prompt_type": "…" } | null,
+  "response": { "id": "uuid", "response_text": "…", "responded_at": "ISO-8601" } | null }
+```
+Same prompt for everyone all day (rotates daily, UTC). `response` is their
+answer from today, if any. POST `{ "prompt_id": "uuid", "response_text": "1-2000 chars" }`
+→ `{ "ok": true }`.
+
+### `GET /api/v1/digests`
+Weekly summaries, newest first (up to 26):
+```json
+{ "digests": [ { "id": "uuid", "week_start": "YYYY-MM-DD", "narrative_text": "…",
+  "suggested_focus": "… | null", "previous_focus_followed_up": true | null,
+  "mood_summary": {…}, "habits_summary": {…}, "exercises_tried": …,
+  "screener_summary": {…} | null, "effectiveness_highlights": …,
+  "created_at": "ISO-8601" } ] }
+```
+Show `narrative_text` and `suggested_focus`. The summary/highlight fields are
+free-form JSON (the numbers behind the narrative); don't hard-code their shape.
+
+### `GET /api/v1/nudges` · `PATCH /api/v1/nudges`
+The proactive coach cards on the web dashboard ("I've noticed…"). GET first
+re-evaluates the member's recent data (may create a new nudge; each kind has
+a 7-day cooldown), then returns up to 3 live ones:
+```json
+{ "nudges": [ { "id": "uuid", "trigger_type": "low_mood_streak | inactivity | screener_step_up | commitment_follow_up | …",
+  "message": "…", "suggested_exercise_slug": "… | null", "acted_on": false,
+  "created_at": "ISO-8601",
+  "resources": [ { "id": "uuid", "resource_type": "directory | low_cost | crisis", "name": "…", "description": "…", "contact_or_url": "…" } ] } ] }
+```
+Show `message`; offer the exercise if `suggested_exercise_slug` is set, and
+the `resources` when present (the "talk to someone" step-up). Treat
+`trigger_type` as open-ended, new kinds get added. PATCH
+`{ "id": "uuid", "dismiss": true }` hides it; `{ "id": "uuid", "acted_on": true }`
+records that they used it. → `{ "ok": true }`
+
+### `GET /api/v1/care-resources`
+Professional-support options for the member's region (by their language):
+`[ { "id", "resource_type", "name", "description", "contact_or_url", "region" } ]`
+(a bare array). Backs the web `/care` page.
+
+### `GET /api/v1/memories` · `DELETE /api/v1/memories/:id`
+"What Kalm remembers about you" (Settings): short summaries the companion
+keeps of past conversations.
+GET → `[ { "id": "uuid", "summary_text": "…", "created_at": "ISO-8601" } ]`
+(a bare array, newest first, up to 100). DELETE → `{ "ok": true }`; the
+companion won't use that memory again.
+
+### `GET /api/v1/data-summary`
+What's stored about them (Settings → Your data), for a transparency screen:
+```json
+{ "items": [ { "key": "mood_logs", "label": "Mood check-ins", "description": "…",
+  "count": 42, "first": "YYYY-MM-DD | null", "last": "YYYY-MM-DD | null" } ] }
+```
+Keys: `mood_logs`, `habit_logs`, `screener_responses`, `thread_summaries`,
+`exercise_completions`, `commitments`.
 
 ---
 
@@ -713,7 +991,7 @@ After this succeeds, sign the local session out and clear any cached data.
 
 ## 12. Support (account & billing questions)
 
-**Deliberately separate from the crisis "Talk to a person" flow** (§5) —
+**Deliberately separate from the in-chat "Talk to a human" flow** (§5.5) —
 this is a low-stakes admin↔member channel for account issues and feedback,
 never a mental-health-support path. Backed by `support_threads` /
 `support_messages`, distinct tables from `human_support_requests`.
@@ -857,6 +1135,14 @@ currently a no-op on the server until `FCM_SERVICE_ACCOUNT_JSON` is
 configured — registering a token will succeed, but don't expect actual
 notifications to arrive until the backend owner confirms that's set.
 
+What gets pushed today (title / body; no data payload, so on tap just open
+the chat and refresh):
+
+| When | Notes |
+|---|---|
+| The companion checks in after ~12 h of quiet | body is the companion's message; off unless `CHAT_CHECKIN_ENABLED` is set on the server |
+| A human coach replies (§5.5) | content-free: "Kalm team" / "Someone from the Kalm team replied to you." |
+
 ---
 
 ## 15. Endpoints that exist but are not for the member-facing app
@@ -873,6 +1159,11 @@ regular member app.
   purchase flow around Stripe Checkout / the customer portal for now.
 - **Push sending requires server-side FCM config** that may not be set yet
   (§14) — registration works regardless, delivery may not.
+- **No realtime for human support** (§5.5): poll while the view is open,
+  push otherwise.
+- **Production API domain:** the API only exists on a deployment that
+  includes it; get the published app URL from the backend owner and check
+  `GET <domain>/api/v1/crisis-resources` returns JSON before building on it.
 - **No CORS headers** on `/api/v1/*` — fine for native builds, a blocker for
   Flutter Web until added.
 - **No API versioning/deprecation headers** — this is "v1" in name only so

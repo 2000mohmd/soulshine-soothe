@@ -84,7 +84,6 @@ const profileUpdate = () =>
   h.state.writes.find((w) => w.op === "upsert" && w.table === "profiles")?.row as
     Record<string, unknown> | undefined;
 
-
 beforeEach(() => {
   h.state.tables = { chat_threads: { single: { id: "thr-1" } } };
   h.state.writes = [];

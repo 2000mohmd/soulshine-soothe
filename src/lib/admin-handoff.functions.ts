@@ -160,6 +160,19 @@ export const replyToHumanSupportRequest = createServerFn({ method: "POST" })
         .eq("id", request.data.thread_id);
     }
 
+    // Best-effort phone notification. Content-free on purpose: it shows on the
+    // lock screen. No-op until FCM is configured and the app has a token.
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { sendPushToUser } = await import("./push.server");
+      await sendPushToUser(supabaseAdmin, request.data.user_id, {
+        title: "Kalm team",
+        body: "Someone from the Kalm team replied to you.",
+      });
+    } catch (error) {
+      console.error("[handoff] reply push failed", error);
+    }
+
     const { logAuditEntry } = await import("./admin-audit.server");
     await logAuditEntry({
       adminUserId: userId,

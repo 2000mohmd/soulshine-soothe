@@ -40,6 +40,23 @@ test.describe("v1 endpoints require a bearer token", () => {
     { method: "get", path: "/api/v1/chat/threads" },
     { method: "post", path: "/api/v1/screeners/phq9/responses" },
     { method: "post", path: "/api/v1/onboarding" },
+    { method: "get", path: "/api/v1/human-support" },
+    { method: "post", path: "/api/v1/human-support" },
+    { method: "post", path: "/api/v1/human-support/messages" },
+    { method: "get", path: "/api/v1/safety-plan" },
+    { method: "get", path: "/api/v1/daily-prompt" },
+    { method: "get", path: "/api/v1/digests" },
+    { method: "get", path: "/api/v1/nudges" },
+    { method: "get", path: "/api/v1/care-resources" },
+    { method: "get", path: "/api/v1/memories" },
+    { method: "get", path: "/api/v1/language" },
+    { method: "get", path: "/api/v1/guardian-consent" },
+    { method: "get", path: "/api/v1/habits/insights" },
+    { method: "post", path: "/api/v1/habits/suggested" },
+    { method: "get", path: "/api/v1/chat/threads/primary" },
+    { method: "get", path: "/api/v1/exercises/box-breathing" },
+    { method: "post", path: "/api/v1/voice/transcribe" },
+    { method: "get", path: "/api/v1/data-summary" },
   ];
   for (const c of cases) {
     test(`${c.method.toUpperCase()} ${c.path} → 401 without a token`, async ({ request }) => {

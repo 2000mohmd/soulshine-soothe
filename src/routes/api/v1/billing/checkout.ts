@@ -63,7 +63,10 @@ export const Route = createFileRoute("/api/v1/billing/checkout")({
           try {
             priceId = await resolvePlanPriceId(plan, interval);
           } catch (err) {
-            throw new ApiError(500, err instanceof Error ? err.message : "Billing isn't configured");
+            throw new ApiError(
+              500,
+              err instanceof Error ? err.message : "Billing isn't configured",
+            );
           }
 
           const { data: authUser } = await supabase.auth.getUser();
