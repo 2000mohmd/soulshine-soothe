@@ -318,7 +318,8 @@ this text through your normal message bubble renderer.
 ordinary chat. `high`/`moderate` severities are still logged for the admin
 team and still trigger their alert email, but the conversation continues
 normally rather than interrupting the person — do not build client UI that
-assumes every flagged message shows a crisis card.
+assumes every flagged message shows a crisis card. A flagged message of any
+severity is never answered with a rate-limit / daily-cap notice.
 
 **Rate / daily-cap notice** is **not** an error — it's a normal `200` with
 `reply.type === "message"`:

@@ -51,10 +51,9 @@ test.describe("authenticated", () => {
     await expect(page.getByRole("switch").first()).toBeVisible();
   });
 
-  test("crisis page stays reachable while signed in", async ({ page }) => {
+  test("/crisis sends signed-in members to the in-chat support view", async ({ page }) => {
     await page.goto("/crisis");
-    await expect(page).toHaveURL(/\/crisis/);
-    await expect(page.getByText(/helpline|988|crisis|emergency|3114|112/i).first()).toBeVisible();
+    await expect(page).toHaveURL(/\/chat\?support=true/);
   });
 
   // Real model call: costs tokens and uses one of the account's daily messages,

@@ -3,25 +3,42 @@
 // sendMessageCore (chat.functions.ts). Not the web path.
 //
 // Same technique as crisis-gate.test.ts: a fake Supabase client that throws the
-// moment anything reads `chat_rate_limits`. If the HTTP wrapper — or any
-// refactor of sendMessageCore — consulted the rate limiter before the crisis
-// gate, this test fails.
+// moment anything reads `chat_rate_limits`.
+//
+// Two guarantees:
+// - critical → the crisis reply, and the rate limiter is never consulted;
+// - high / moderate (regex OR semantic classifier) → the conversation continues
+//   normally (no crisis card), but the rate limiter is still never consulted, so
+//   a member who has used up their daily messages is never told "limit reached"
+//   in answer to a crisis message.
 
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const h = vi.hoisted(() => {
   const touched: string[] = [];
+  // Set when the gate marks the saved message flagged_crisis (semantic path).
+  const state = { flaggedRow: false };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- self-referential test stub
   const chain: any = {
     insert: () => chain,
-    update: () => chain,
+    update: (values: { flagged_crisis?: boolean }) => {
+      if (values?.flagged_crisis) state.flaggedRow = true;
+      return chain;
+    },
     select: () => chain,
     eq: () => chain,
     neq: () => chain,
+    is: () => chain,
+    in: () => chain,
+    gte: () => chain,
     order: () => chain,
     limit: () => chain,
-    // chat_threads ownership check + profiles.language lookup both land here.
-    maybeSingle: async () => ({ data: { id: "thread-1", language: null }, error: null }),
+    delete: () => chain,
+    // thread ownership, profiles.language and the post-gate flagged re-read all land here.
+    maybeSingle: async () => ({
+      data: { id: "thread-1", language: null, flagged_crisis: state.flaggedRow },
+      error: null,
+    }),
     single: async () => ({
       data: {
         id: "msg-1",
@@ -35,19 +52,19 @@ const h = vi.hoisted(() => {
   };
   const fake = {
     touched,
+    state,
     from(table: string) {
       touched.push(table);
       if (table === "chat_rate_limits") {
-        throw new Error("rate limiter must not run before the crisis gate");
+        throw new Error("rate limiter must not run for a crisis message");
       }
       return chain;
     },
+    rpc: async () => ({ data: null, error: null }),
   };
-  return { touched, fake };
+  return { touched, state, fake };
 });
 
-// The mobile handler's explicit bearer check — resolve it to a fixed user and
-// hand back the fake client that sendMessageCore then runs against.
 vi.mock("@/lib/api-auth.server", () => ({
   authenticateBearer: async () => ({ ok: true, userId: "user-1", supabase: h.fake }),
 }));
@@ -56,46 +73,71 @@ vi.mock("./crisis-alert.server", () => ({
   logCrisisEvent: vi.fn(async () => "event-id"),
 }));
 
-vi.mock("./crisis-classifier.server", () => ({
-  classifyCrisisRisk: vi.fn(async () => ({ flagged: false, severity: null, reason: null })),
+const classify = vi.hoisted(() =>
+  vi.fn(async () => ({ flagged: false, severity: null, reason: null }) as unknown),
+);
+vi.mock("./crisis-classifier.server", () => ({ classifyCrisisRisk: classify }));
+
+// The normal (non-crisis-card) path calls the companion model; stub it.
+vi.mock("./llm-provider.server", () => ({
+  callCompanionModel: vi.fn(async () => ({
+    content: [{ type: "text", text: "I'm here with you." }],
+    stop_reason: "end_turn",
+    usage: { input_tokens: 1, output_tokens: 1 },
+  })),
+  streamCompanionModel: vi.fn(),
 }));
 
 import { handleChatMessages } from "@/routes/api/v1/-handlers";
 
 const THREAD_ID = "11111111-1111-1111-1111-111111111111";
 
-const post = (body: unknown) =>
-  new Request("https://api.test/api/v1/chat/messages", {
-    method: "POST",
-    headers: { "content-type": "application/json", Authorization: "Bearer x.y.z" },
-    body: JSON.stringify(body),
-  });
+const post = (content: string) =>
+  handleChatMessages(
+    new Request("https://api.test/api/v1/chat/messages", {
+      method: "POST",
+      headers: { "content-type": "application/json", Authorization: "Bearer x.y.z" },
+      body: JSON.stringify({ thread_id: THREAD_ID, content }),
+    }),
+  );
 
-describe("POST /api/v1/chat/messages — crisis gate runs before the rate limiter", () => {
-  it("returns the structured crisis reply and never touches chat_rate_limits", async () => {
-    const res = await handleChatMessages(
-      post({ thread_id: THREAD_ID, content: "I want to kill myself" }),
-    );
+beforeEach(() => {
+  h.touched.length = 0;
+  h.state.flaggedRow = false;
+  classify.mockResolvedValue({ flagged: false, severity: null, reason: null });
+});
+
+describe("POST /api/v1/chat/messages — crisis messages never reach the rate limiter", () => {
+  it("critical: returns the structured crisis reply", async () => {
+    const res = await post("I have the pills ready for tonight");
 
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.reply.type).toBe("crisis");
-    expect(body.reply.severity).toBe("high");
+    expect(body.reply.severity).toBe("critical");
     expect(body.reply.resources.length).toBeGreaterThan(0);
     expect(body.reply.disclaimer).toBeTruthy();
-
-    // The rate-limit table would have thrown if it were read; it must not be.
     expect(h.touched).toContain("chat_messages");
     expect(h.touched).not.toContain("chat_rate_limits");
   });
 
-  it("handles a moderate-tier crisis the same way (still no rate-limit read)", async () => {
-    h.touched.length = 0;
-    const res = await handleChatMessages(
-      post({ thread_id: THREAD_ID, content: "I wish I could just disappear forever" }),
-    );
+  for (const [tier, content] of [
+    ["high", "I want to kill myself"],
+    ["moderate", "I wish I could just disappear forever"],
+  ] as const) {
+    it(`${tier} (regex): conversation continues, rate limiter untouched`, async () => {
+      const res = await post(content);
+      expect(res.status).toBe(200);
+      expect((await res.json()).reply.type).toBe("message");
+      expect(h.touched).not.toContain("chat_rate_limits");
+    });
+  }
+
+  it("flagged only by the semantic classifier: rate limiter untouched", async () => {
+    classify.mockResolvedValue({ flagged: true, severity: "moderate", reason: "test" });
+    const res = await post("everything feels pointless lately");
     expect(res.status).toBe(200);
-    expect((await res.json()).reply.type).toBe("crisis");
+    expect((await res.json()).reply.type).toBe("message");
     expect(h.touched).not.toContain("chat_rate_limits");
   });
 });

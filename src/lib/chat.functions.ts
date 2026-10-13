@@ -369,18 +369,33 @@ async function prepareChatTurn(
     };
   }
 
-
   // --- Per-user rate limit (normal chat path only; never gates crisis).
   // Both crisis checks above have already run and come up clear. Enforces a
   // short sliding window AND a tier-aware daily message cap; fails open. The
   // daily cap comes from chat-limits.ts — the same source GET /api/v1/entitlements
   // reports from, so the advertised limit and the enforced limit cannot drift. ---
+  //
+  // High/moderate crisis messages don't get the crisis card (only critical
+  // does) and continue as normal chat — but they must never be answered with
+  // "you've hit your limit". Flagged = the regex matched, or the semantic
+  // classifier marked the saved message (runCrisisGate updates the row).
+  const flagged =
+    triage.matched.length > 0 ||
+    (
+      await supabase
+        .from("chat_messages")
+        .select("flagged_crisis")
+        .eq("id", savedUser.data.id)
+        .maybeSingle()
+    ).data?.flagged_crisis === true;
   const tier = profileLang.data?.subscription_tier ?? "free";
   const rateLimiter = getRateLimiter(supabase);
-  const decision = await rateLimiter.checkAndConsume(userId, {
-    tier,
-    dailyCap: dailyMessageCap(tier),
-  });
+  const decision = flagged
+    ? ({ allowed: true } as const)
+    : await rateLimiter.checkAndConsume(userId, {
+        tier,
+        dailyCap: dailyMessageCap(tier),
+      });
   if (!decision.allowed) {
     const savedLimit = await supabase
       .from("chat_messages")
